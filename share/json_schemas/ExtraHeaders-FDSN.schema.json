@@ -1,0 +1,373 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "http://www.fdsn.org/schemas/ExtraHeaders-FDSN.schema.json",
+  "description": "Extra headers in xSEED data format",
+  "definitions": {
+    "Equipment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Model": {
+          "type": "string",
+          "description": "Model of equipment"
+        },
+        "Serial": {
+          "type": "string",
+          "description": "Serial number of equipment"
+        }
+      }
+    }
+  },
+  "FDSN": {
+    "description": "Reserved extra headers defined by the FDSN",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "Time": {
+        "description": "Headers related to data timing and recording system clock",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Quality": {
+            "description": "Timing quality.  A vendor specific value from 0 to 100% of maximum accuracy. [same as SEED 2.4 Blockette 1001, field 3]",
+            "type": "number"
+          },
+          "Correction": {
+            "description": "Time correction applied to record start time in seconds. [same as SEED 2.4 FSDH, field 16]",
+            "type": "number"
+          },
+          "LeapSecond": {
+            "description": "If present, one or more leap seconds occuring during this record.  The value specifies the number of leap seconds and direction.  For example, use 1 to specify a single positive leap second and -1 to specify a single negative leap second. [incorporates SEED 2.4 FSDH, field 12, bits 4 and 5]",
+            "type": "integer"
+          },
+          "Exception": {
+            "description": "List of timinig exceptions",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "Time": {
+                  "description": "Time of timing exeption. [same as SEED 2.4 Blockette 500, field 4]",
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "VCOCorrection": {
+                  "description": "VCO correction, a percentage from 0 to 100% of VCO control value, where 0 is the slowest and 100 is the fastest.  [same as SEED 204 Blockette 500, field 3]",
+                  "type": "number"
+                },
+                "ReceptionQuality": {
+                  "description": "Reception quality as a percent of maximum clock accuracy based only on information from the clock. [same as SEED 2.4 Blockette 500, field 6]",
+                  "type": "integer"
+                },
+                "Count": {
+                  "description": "Exception count, with meaning based on type of exception, such as 15 missing time marks.  [same as SEED 2.4 Blockette 500, field 7]",
+                  "type": "integer"
+                },
+                "Type": {
+                  "description": "Description of clock exception, such as MISSING TIMEMARK. [same as SEED 2.4 Blockette 500, field 8]",
+                  "type": "string"
+                },
+                "ClockStatus": {
+                  "description": "Description of clock status, clock specific parameters such as the station for an Omega clock or satellite signal to noise ratios for GPS clocks. [same as SEED 2.4 Blockette 500, field 10]",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Event": {
+        "description": "Headers related to event detection and progression",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Begin": {
+            "description": "An event starts in this record. [same as SEED 2.4 FSDH, field 12, bit 2]",
+            "type": "boolean"
+          },
+          "End": {
+            "description": "An in-progress event ends in this record, i.e. the detection algorithm de-triggers. [same as SEED 2.4 FSDH, field 12, bit 3]",
+            "type": "boolean"
+          },
+          "InProgress": {
+            "description": "An event is in progress. [same as SEED 2.4 FSDH, field 12, bit 6]",
+            "type": "boolean"
+          },
+          "Detection": {
+            "description": "List of event detections",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "Type": {
+                  "description": "Type of event detection, e.g. MURDOCK",
+                  "type": "string"
+                },
+                "SignalAmplitude": {
+                  "description": "Event amplitude of signal in counts. [same as SEED 2.4 Blockettews 200 and 201, field 3]",
+                  "type": "number"
+                },
+                "SignalPeriod": {
+                  "description": "Event period of signal in seconds. [same as SEED 2.4 Blockettews 200 and 201, field 4]",
+                  "type": "number"
+                },
+                "BackgroundEstimate": {
+                  "description": "Event background estimate in counts. [same as SEED 2.4 Blockettews 200 and 201, field 5]",
+                  "type": "number"
+                },
+                "Wave": {
+                  "description": "Event detection wave, use values of DILATATION or COMPRESSION if determined. [same as SEED 2.4 Blockettews 200 and 201, field 6, bit 0]",
+                  "type": "string"
+                },
+                "Units": {
+                  "description": "Units of amplitude band background estimate, use COUNTS for unprocessed signal. [similar to SEED 2.4 Blockettews 200, field 6, bit 1]",
+                  "type": "string"
+                },
+                "OnsetTime": {
+                  "description": "Event signal onset time. [same as SEED 2.4 Blockettews 200 and 201, field 8]",
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "MEDSNR": {
+                  "description": "Murdock event detection signal-to-noise ratios. [same as SEED 2.4 Blockette 201, field 9]",
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "MEDLookback": {
+                  "description": "Murdock event detction lookback value: 0, 1 or 2. [same as SEED 2.4 Blockette 201, field 10]",
+                  "type": "integer"
+                },
+                "MEDPickAlgorithm": {
+                  "description": "Murdock event detection pick algorithm: 0 or 1. [same as SEED 2.4 Blockette 201, field 11]",
+                  "type": "integer"
+                },
+                "Detector": {
+                  "description": "Name of the event detector. [same as SEED 2.4 Blockette 200, field 9 and Blockette 201, field 12]",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Calibration": {
+        "description": "Headers related to calibrations",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Sequence": {
+            "description": "List of calibration sequences",
+            "type": "array",
+            "items": {
+              "description": "List of calibrations",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "Type": {
+                  "description": "Type of calibration: STEP, SINE, PSEUDORANDOM, GENERIC.",
+                  "type": "string"
+                },
+                "BeginTime": {
+                  "description": "Calibration begin time. [similar to SEED 2.4 Blockettes 300,310,320,390, field 3]",
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "EndTime": {
+                  "description": "Calibration end time. [same as SEED 2.4 Blockette 395, field 3]",
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "Steps": {
+                  "description": "Number of step calibrations in sequence. [same as SEED 2.4 Blockette 300, field 4]",
+                  "type": "number"
+                },
+                "StepFirstPulsePositive": {
+                  "description": "Step calibration, first pulse is positive. [same as SEED 2.4 Blockette 300, field 5, bit 0]",
+                  "type": "boolean"
+                },
+                "StepAlternateSign": {
+                  "description": "Step calibration alternate sign.  [same as SEED 2.4 Blockettes 300, field 5, bit 1]",
+                  "type": "boolean"
+                },
+                "Trigger": {
+                  "description": "Calibration trigger, use AUTOMATIC or MANUAL. [same as SEED 2.4 Blockettes 300,310,320,390, field 5, bit 2]",
+                  "type": "string"
+                },
+                "Continued": {
+                  "description": "Calibration is continued from previous records. [same as SEED 2.4 Blockettes 300,310,320,390, field 5, bit 3]",
+                  "type": "boolean"
+                },
+                "Amplitude": {
+                  "description": "Amplitude of calibration signal.  For pseudo-random calibrations, this should be the peak-to-peak amplitude of the steps. [same as SEED 2.4 Blockettes 300,310, field 8 and Blockettes 320,390, field 7]",
+                  "type": "number"
+                },
+                "InputUnits": {
+                  "description": "Units of calibration input, usually volts or amps. [same as SEED 2.4 Blockette 52, field 9]",
+                  "type": "string"
+                },
+                "AmplitudeRange": {
+                  "description": "Amplitude range of calibration, use values of PEAKTOPEAK, ZEROTOPEAK, RMS OR RANDOM. [same as SEED 2.4 Blockette 310, field 5, bits 4,5,6 and Blockette 320, field 5, bit 4]",
+                  "type": "string"
+                },
+                "Duration": {
+                  "description": "Duration of calibration in seconds. For step calibrations this is the duration of the step.  [same as SEED 2.4 Blockettes 300,310,320,390, field 6]",
+                  "type": "number"
+                },
+                "SinePeriod": {
+                  "description": "Period of sine calibrations in seconds. [same as SEED 2.4 Blockette 310, field 7]",
+                  "type": "number"
+                },
+                "StepBetween": {
+                  "description": "Interval between times a step calibration is on in seconds. [same as SEED 2.4 Blockette 300, field 7]",
+                  "type": "number"
+                },
+                "InputChannel": {
+                  "description": "Channel containing the calibration input. [same as SEED 2.4 Blockettes 300,310, field 9 and Blockettes 320,390, field 8]",
+                  "type": "string"
+                },
+                "ReferenceAmplitude": {
+                  "description": "Reference amplitude.  This is a user-defined value that indicates either the voltage or amperage of the calibration signal when the calibrator is set to 0dB. [same as SEED 2.4 Blockettes 300,310, field 11 and Blockette 320, field 10]",
+                  "type": "number"
+                },
+                "Coupling": {
+                  "description": "Coupling of the calibration signal, such as RESISTIVE or CAPACITIVE. [same as SEED 2.4 Blockettes 300,310, field 12 and Blockette 320, field 11]",
+                  "type": "string"
+                },
+                "Rolloff": {
+                  "description": "Rolloff characteristics for any filters used on the calibrator, such as 3dB@10Hz.  [same as SEED 2.4 Blockettes 300,310, field 13 and Blockette 320, field 12]",
+                  "type": "string"
+                },
+                "Noise": {
+                  "description": "Noise characteristics for pseudo-random calibrations, such as WHITE or RED. [same as SEED 2.4 Blockette 320, field 13]",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Recenter": {
+        "description": "Headers related to sensor recentering (mass, gimble, etc.)",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "Sequence": {
+            "description": "List of recentering sequences",
+            "type": "array",
+            "items": {
+              "description": "List of recenterings",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "Type": {
+                  "description": "Type of recenter: Mass, Gimbal, etc.  If omitted a mass recenter may be assumed.",
+                  "type": "string"
+                },
+                "BeginTime": {
+                  "description": "Recenter begin time.",
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "EndTime": {
+                  "description": "Estimate of recenter end time.",
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "Trigger": {
+                  "description": "Calibration trigger, use AUTOMATIC or MANUAL.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Flags": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "MassPositionOffscale": {
+            "description": "Sensor mass position is offscale as defined by the vendor or operator.",
+            "type": "boolean"
+          },
+          "AmplifierSaturation": {
+            "description": "Amplifier saturation detected. [same as SEED 2.4 FSDH, field 14, bit 0]",
+            "type": "boolean"
+          },
+          "DigitizerClipping": {
+            "description": "Digitizer clipping detected. [same as SEED 2.4 FSDH, field 14, bit 1]",
+            "type": "boolean"
+          },
+          "Spikes": {
+            "description": "Spikes detected. [same as SEED 2.4 FSDH, field 14, bit 2]",
+            "type": "boolean"
+          },
+          "Glitches": {
+            "description": "Glitches detected. [same as SEED 2.4 FSDH, field 14, bit 3]",
+            "type": "boolean"
+          },
+          "FilterCharging": {
+            "description": "A digital filter may be charging. [same as SEED 2.4 FDSH, field 14, bit 6]",
+            "type": "boolean"
+          },
+          "StationVolumeParityError": {
+            "description": "DEPRECATED Station volume parity error possibly present. [same as SEED 2.4 FDSH, field 13, bit 0]",
+            "type": "boolean"
+          },
+          "LongRecordRead": {
+            "description": "DEPRECATED Long record read (possibly no problem). [same as SEED 2.4 FDSH, field 13, bit 1]",
+            "type": "boolean"
+          },
+          "ShortRecordRead": {
+            "description": "DEPRECATED Short record read (record padded). [same as SEED 2.4 FDSH, field 13, bit 2]",
+            "type": "boolean"
+          },
+          "StartOfTimeSeries": {
+            "description": "DEPRECATED Start of time series. [same as SEED 2.4 FDSH, field 13, bit 3]",
+            "type": "boolean"
+          },
+          "EndOfTimeSeries": {
+            "description": "DEPRECATED End of time series. [same as SEED 2.4 FDSH, field 13, bit 4]",
+            "type": "boolean"
+          },
+          "MissingData": {
+            "description": "DEPRECATED Missing data. [same as SEED 2.4 FDSH, field 14, bit 4]",
+            "type": "boolean"
+          },
+          "TelemetrySyncError": {
+            "description": "DEPRECATED Telemetry synchronization error. [same as SEED 2.4 FDSH, field 14, bit 5]",
+            "type": "boolean"
+          }
+        }
+      },
+      "Logger": {
+        "description": "Description of data logger",
+        "$ref": "#/definitions/Equipment"
+      },
+      "Sensor": {
+        "description": "Description of sensor",
+        "$ref": "#/definitions/Equipment"
+      },
+      "Clock": {
+        "description": "Description of clock system",
+        "$ref": "#/definitions/Equipment"
+      },
+      "ProvenanceURI": {
+        "description": "An identifier for a provenance description",
+        "type": "string"
+      },
+      "DataQuality": {
+        "description": "Data quality indicator, use D, R, Q or M. [same as SEED 2.4 FSDH, field 2]",
+        "type": "string"
+      },
+      "Sequence": {
+        "description": "Data record sequence number. [same as SEED 2.4 FSDH, field 1]",
+        "type": "integer"
+      }
+    }
+  }
+}

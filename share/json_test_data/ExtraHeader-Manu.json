@@ -1,0 +1,10 @@
+{
+  "Manufacturer123":
+	{
+	  "Metadata":
+		{
+		  "FilamentCurrent": 1234,
+                  "HyperCoordinates":"Gallifrey"
+		}
+        }
+}

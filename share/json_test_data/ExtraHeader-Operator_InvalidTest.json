@@ -1,0 +1,11 @@
+{
+  	"OperatorXYZ":
+	{
+	        "DSP":
+		{
+        	   "PeakRMS" : "1.2 megacochranes",
+		   "RMSWindow": "15 light years",
+                   "Beard" : true
+       	        }
+	}
+}

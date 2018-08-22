@@ -1,0 +1,10 @@
+{
+  	"OperatorXYZ":
+	{
+	        "DSP":
+		{
+        	   "PeakRMS" : 12345,
+		   "RMSWindow": 54321
+       	        }
+	}
+}
