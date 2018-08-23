@@ -3,7 +3,7 @@ SET(SRCS main.c)
 ADD_EXECUTABLE(xseed2json ${SRCS})
 TARGET_LINK_LIBRARIES(xseed2json xseed-common)
 add_test(xseed2json ${CMAKE_BINARY_DIR}/bin/xseed2json COMMAND xseed2json
-        ${CMAKE_SOURCE_DIR}/share/ref_datasets/reference-baseline-record-sinusoid-steim2_EH-FDSN-Full.xseed -vvv)
+        ${CMAKE_SOURCE_DIR}/share/reference_datasets/reference-baseline-record-sinusoid-steim2_EH-FDSN-Full.xseed -vvv)
 IF (MSVC)
     SET(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} "/NODEFAULTLIBS:LIBCMT")
 ENDIF (MSVC)
