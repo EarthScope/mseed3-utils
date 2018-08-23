@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "http://www.fdsn.org/schemas/ExtraHeaders-Manufacturer123.schema.json",
+  "properties": {
+    "Manufacturer123": {
+      "description": "Extra headers defined by the Manufacturer123",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Metadata": {
+          "description": "Headers for metadata for a light bulb in the TARDIS",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "FilamentCurrent": {
+              "description": "Average current in filament in picoamps",
+              "type": "number"
+            },
+            "HyperCoordinates": {
+              "description": "Space-time coordinates of the TARDIS",
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

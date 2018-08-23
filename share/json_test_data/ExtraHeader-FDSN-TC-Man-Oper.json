@@ -1,0 +1,19 @@
+{
+    "FDSN": {
+        "Time": {
+            "Quality": 90
+        }
+    },
+    "Manufacturer123": {
+        "Metadata": {
+            "FilamentCurrent": 16.4,
+            "HyperCoordinates": "1.1789:965402:73324@3.14159"
+        }
+    },
+    "OperatorXYZ": {
+        "DSP": {
+            "PeakRMS": 2067,
+            "RMSWindow": 10.5
+        }
+    }
+}

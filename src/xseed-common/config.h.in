@@ -1,0 +1,3 @@
+#cmakedefine MSEED_VERSION @MSEED_VERSION@
+#cmakedefine HAS_STRNLEN
+#cmakedefine HAS_STRNDUP
