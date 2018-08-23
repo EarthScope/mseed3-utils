@@ -5,7 +5,7 @@ add_sources(xseed-validator main.c parse_warn_options.c check_file.c
 ADD_EXECUTABLE(xseed-validator ${xseed-validator_SRCS})
 TARGET_LINK_LIBRARIES(xseed-validator xseed-common)
 add_test(xseed-validator ${CMAKE_BINARY_DIR}/bin/xseed-validator COMMAND xseed-validator
-        ${CMAKE_SOURCE_DIR}/share/ref_datasets/reference-baseline-record-sinusoid-steim2_EH-FDSN-Full.xseed
+        ${CMAKE_SOURCE_DIR}/share/reference_datasets/reference-baseline-record-sinusoid-steim2_EH-FDSN-Full.xseed
         -j ${CMAKE_SOURCE_DIR}/share/json_schemas/ExtraHeaders-FDSN.schema.json -vvv)
 
 INSTALL(TARGETS xseed-validator
