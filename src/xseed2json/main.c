@@ -150,14 +150,13 @@ int print_xseed_2_json(char *file_name, bool print_data, uint8_t verbose)
         jsonObj = json_value_get_object(val);
 
         /* Generate a start time string */
-        ms_nstime2seedtimestr(msr->starttime, times, 1);
+        ms_nstime2timestr(msr->starttime, times, SEEDORDINAL, NANO_MICRO_NONE);
 
-
-        ierr = json_object_set_string(jsonObj, "tsid", msr->tsid);
+        ierr = json_object_set_string(jsonObj, "sid", msr->sid);
 
         if (ierr == JSONFailure)
         {
-            printf("Something went wrong parsing to JSON : tsID");
+            printf("Something went wrong parsing to JSON : SID");
             return EXIT_FAILURE;
         }
 
@@ -209,7 +208,7 @@ int print_xseed_2_json(char *file_name, bool print_data, uint8_t verbose)
             return EXIT_FAILURE;
         }
 
-        ierr = json_object_set_number(jsonObj, "samprate", msr_sampratehz(msr));
+        ierr = json_object_set_number(jsonObj, "samprate", msr3_sampratehz(msr));
 
         if (ierr == JSONFailure)
         {
