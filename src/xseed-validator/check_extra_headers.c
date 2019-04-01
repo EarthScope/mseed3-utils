@@ -91,15 +91,14 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
   /* If schema file is provided, attempt to validate */
   if (schema && xseed_file_exists (schema))
   {
-
-    //Get user provided schema and parge into WJElement
+    /* Get user provided schema and parge into WJElement */
     FILE *schema_file        = fopen (schema, "r");
     WJReader schema_reader   = WJROpenFILEDocument (schema_file, schema_buffer, SCHEMA_BUFFER_SIZE);
     WJElement schema_element = WJEOpenDocument (schema_reader, NULL, NULL, NULL);
 
     WJEErrCB errFunc = &schema_error_func;
 
-    //Validate extra headers against schema
+    /* Validate extra headers against schema */
     XplBool isValid = WJESchemaValidate (schema_element, document_element, errFunc, NULL, NULL, NULL);
     if (!isValid)
     {
@@ -142,7 +141,7 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
   return valid_extra_header;
 }
 
-//Helper function used with WJElement for error reporting
+/* Helper function used with WJElement for error reporting */
 static void
 schema_error_func (void *client, const char *format, ...)
 {

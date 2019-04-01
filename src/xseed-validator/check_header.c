@@ -86,7 +86,7 @@ check_header (struct warn_options_s *options, FILE *input_file, long file_len, l
   if (ms_bigendianhost())
   {
     if (verbose > 2)
-      printf ("host is Big Endian, *Wanring* untested\n");
+      printf ("host is Big Endian, *Warning* untested\n");
   }
   else
   {
@@ -114,21 +114,18 @@ check_header (struct warn_options_s *options, FILE *input_file, long file_len, l
  */
 
 bool
-parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_len, uint16_t *extra_header_len,
-              uint32_t *payload_len, uint8_t *payload_fmt, uint32_t recordNum, uint8_t verbose)
+parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_len,
+              uint16_t *extra_header_len, uint32_t *payload_len, uint8_t *payload_fmt,
+              uint32_t recordNum, uint8_t verbose)
 {
-  char h_flag[3];
-  h_flag[0] = (char)buffer[0];
-  h_flag[1] = (char)buffer[1];
-
   bool header_valid = true;
 
   if (verbose > 1)
-    printf ("Record: %d --- Checking Header Flag value: %c%c\n", recordNum, h_flag[0], h_flag[1]);
+    printf ("Record: %d --- Checking Header Signature value: %c%c\n", recordNum, buffer[0], buffer[1]);
 
-  if (!(h_flag[0] == 'M' && h_flag[1] == 'S'))
+  if (!(buffer[0] == 'M' && buffer[1] == 'S'))
   {
-    printf ("Error! Record: %d --- Header Flag Value Incorrect ('MS' is only valid flag)\n", recordNum);
+    printf ("Error! Record: %d --- Header Signature Incorrect ('MS' is only valid flag)\n", recordNum);
     header_valid = false;
     if (options->treat_as_errors)
     {
@@ -136,14 +133,14 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
     }
   }
 
-  //---Check MS version---
-  uint8_t msVersion = (uint8_t)buffer[2];
+  //---Check format version---
+  uint8_t formatVersion = (uint8_t)buffer[2];
   if (verbose > 1)
-    printf ("Record: %d --- Checking File Version value: %d\n", recordNum, msVersion);
+    printf ("Record: %d --- Checking File Version value: %d\n", recordNum, formatVersion);
 
-  if (3 != msVersion)
+  if (3 != formatVersion)
   {
-    printf ("Error! Record: %d --- Header Version Value Incorrect ('3' currently is the only supported MS version)\n",
+    printf ("Error! Record: %d --- Header Version Value Incorrect ('3' is the only supported version)\n",
             recordNum);
     header_valid = false;
     if (options->treat_as_errors)
@@ -234,8 +231,10 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
 
   //---Check valid nanoseconds---
   uint32_t nanoseconds =
-      (uint8_t)buffer[4] + ((uint8_t)buffer[5] * (0xFF + 1)) + ((uint8_t)buffer[6] * (0xFFFF + 1)) +
-      ((uint8_t)buffer[7] * (0xFFFFFF + 1));
+    (uint8_t)buffer[4] +
+    ((uint8_t)buffer[5] * (0xFF + 1)) +
+    ((uint8_t)buffer[6] * (0xFFFF + 1)) +
+    ((uint8_t)buffer[7] * (0xFFFFFF + 1));
   //uint32_t nanoseconds = ((uint8_t)buffer[4] | ((uint8_t)buffer[5] << 8) | ((uint8_t)buffer[6] << 16) | ((uint8_t)buffer[7] << 24));
   if (verbose > 1)
     printf ("Record: %d --- Checking Nanoseconds value: %d\n", recordNum, nanoseconds);
@@ -263,66 +262,55 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
   {
   case 0:
     if (verbose > 1)
-      printf ("Payload flag indicates TEXT payload\n");
+      printf ("Payload flag indicates ASCII/TEXT\n");
     break;
   case 1: /* 16-bit, integer, little-endian*/
     if (verbose > 1)
-      printf ("Payload flag indicates 16-bit, integer, little-endian payload\n");
+      printf ("Payload flag indicates 16-bit, integer, little-endian\n");
     break;
   case 3: /* 32-bit, integer, little-endian*/
     if (verbose > 1)
-      printf ("Payload flag indicates 32-bit, integer, little-endian payload\n");
+      printf ("Payload flag indicates 32-bit, integer, little-endian\n");
     break;
   case 4: /* IEEE 32-bit floats, little-endian */
     if (verbose > 1)
-      printf ("Payload flag indicates IEEE 32-bit floats, little-endian payload\n");
+      printf ("Payload flag indicates IEEE 32-bit floats, little-endian\n");
     break;
   case 5: /* IEEE 64-bit floats (double), little-endian */
     if (verbose > 1)
-      printf ("Payload flag indicates IEEE 64-bit floats (double), little-endian payload\n");
+      printf ("Payload flag indicates IEEE 64-bit floats (double), little-endian\n");
     break;
-  case 10: /* Steim-1 integer compressin, big-endian */
+  case 10: /* Steim-1 integer compression, big-endian */
     if (verbose > 1)
-      printf ("Steim-1 integer compression, big-endian\n");
+      printf ("Payload flag indicates Steim-1 integer compression, big-endian\n");
     break;
-  case 11: /* Steim-2 integer compressin, big-endian */
+  case 11: /* Steim-2 integer compression, big-endian */
     if (verbose > 1)
-      printf ("Steim-2 integer compression, big-endian\n");
-    break;
-  case 14: /* Steim-2 integer compressin, big-endian */
-    if (verbose > 1)
-      printf ("Steim-2 integer compression, big-endian\n");
-    break;
-    //TODO verify this with chad
-  case 16: /* GEOSCOPE Muxed 16/4 bit gain/exp ,little endian(?) */
-    if (verbose > 1)
-      printf ("GEOSCOPE Muxed 16/4 bit gain/exp, little endian(?)\n");
+      printf ("Payload flag indicates Steim-2 integer compression, big-endian\n");
     break;
   case 19: /* Steim-3 integer compressin, big-endian */
     if (verbose > 1)
-      printf ("Steim-3 integer compression, big-endian\n");
+      printf ("Payload flag indicates Steim-3 integer compression, big-endian\n");
     break;
-    //TODO verify this with chad
-  case 30: /* SRO Gain Ranged Format, ?-endian */
+  case 50: /* 16-bit integers, general compressor */
     if (verbose > 1)
-      printf ("SRO Gain Ranged Format, ?-endian\n");
+      printf ("Payload flag indicates 16-bit integers, general compressor\n");
     break;
-    //TODO verify this with chad
-  case 32: /* DWWSSN Format, ?-endian */
+  case 51: /* 32-bit integer, general compressor */
     if (verbose > 1)
-      printf ("DWWSSN Format, ?-endian\n");
+      printf ("Payload flag indicates 32-bit integer, general compressor\n");
     break;
-  case 53: /* 32-bit integer, little-endian, general compressor */
+  case 52: /* 32-bit IEEE floats, general compressor */
     if (verbose > 1)
-      printf ("32-bit integer, little-endian, general compressor\n");
+      printf ("32-bit IEEE floats, general compressor\n");
     break;
-  case 54: /* 32-bit IEEE floats, little-endian, general compressor */
+  case 53: /* 64-bit IEEE floats, general compressor */
     if (verbose > 1)
-      printf ("32-bit IEEE floats, little-endian, general compressor\n");
+      printf ("64-bit IEEE floats, general compressor\n");
     break;
-  case 55: /* 64-bit IEEE floats, little-endian, general compressor */
+  case 100: /* Opaque data */
     if (verbose > 1)
-      printf ("64-bit IEEE floats, little-endian, general compressor\n");
+      printf ("Opaque data\n");
     break;
   default: /* invalid payload type */
     printf ("Error! Record: %d --- Payload Type Flag is Invalid!\n", recordNum);
@@ -395,5 +383,4 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
   *identifier_len   = identifier_l;
 
   return header_valid;
-  //fflush(stdout);
 }
