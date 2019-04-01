@@ -23,7 +23,7 @@
 //CMD line option structure
 static const struct xseed_option_s args[] = {
         {'h', "help",    "   Display usage information",              NULL, NO_OPTARG},
-        {'j', "json",    "   Json schema",                            NULL, MANDATORY_OPTARG},
+        {'j', "schema",  "   File containing JSON Schema",            NULL, MANDATORY_OPTARG},
         {'v', "verbose", "Verbosity level",                           NULL, OPTIONAL_OPTARG},
         {'d', "data",    "   Print data payload",                     NULL, OPTIONAL_OPTARG},
         {'W', "       ", "Option flag  *e.g* -W error,skip-payload ", NULL, MANDATORY_OPTARG},
