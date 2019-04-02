@@ -1,7 +1,4 @@
-#include "validator.h"
-#include "warnings.h"
 #include <errno.h>
-#include <libmseed.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -11,6 +8,11 @@
 
 #include <mseedformat.h>
 #include <unpack.h>
+
+#include <libmseed.h>
+
+#include "validator.h"
+#include "warnings.h"
 
 bool
 check_payloads (struct warn_options_s *options, FILE *input, uint32_t payload_len,
