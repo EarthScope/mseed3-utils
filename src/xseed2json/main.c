@@ -4,6 +4,7 @@
 #include <libmseed.h>
 #include <parson.h>
 
+#include "xseed2json_config.h"
 #include <xseed-common/cmd_opt.h>
 #include <xseed-common/files.h>
 #include <xseed-common/xseed_string.h>
@@ -22,6 +23,7 @@ static const struct xseed_option_s args[] = {
     {'h', "help", "   Display usage information", NULL, NO_OPTARG},
     {'v', "verbose", "Verbosity level", NULL, OPTIONAL_OPTARG},
     {'d', "data", "   Print data payload", NULL, OPTIONAL_OPTARG},
+    {'V', "version", "Print program version", NULL, OPTIONAL_OPTARG},
     {0, 0, 0, 0, 0}};
 
 int print_xseed_2_json (char *file_name, bool print_data, uint8_t verbose);
@@ -39,6 +41,7 @@ main (int argc, char **argv)
   int opt;
   int longindex;
   unsigned char display_usage = 0;
+  unsigned char display_revision = 0;
   uint8_t verbose             = 0;
   char *file_name             = NULL;
   bool print_data             = false;
@@ -67,6 +70,9 @@ main (int argc, char **argv)
     case 'h':
       display_usage = 1;
       break;
+    case 'V':
+      display_revision = 1;
+      break;
     default:
       //display_usage++;
       break;
@@ -81,6 +87,16 @@ main (int argc, char **argv)
   {
     display_help (argv[0], " [options] infile(s)", "Program to print an xSEED file in JSON format", args);
     return display_usage < 2 ? EXIT_FAILURE : EXIT_SUCCESS;
+  }
+
+  if (display_revision)
+  {
+
+    display_version(argv[0], "Program to Print a xSEED file in JSON format",
+                             XSEED2JSON_VERSION_MAJOR,
+                             XSEED2JSON_VERSION_MINOR,
+                             XSEED2JSON_VERSION_PATCH);
+    return EXIT_SUCCESS;
   }
 
   free (long_opt_array);
