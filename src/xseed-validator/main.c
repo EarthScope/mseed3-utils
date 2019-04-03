@@ -117,14 +117,14 @@ int main(int argc, char **argv)
 
     if (display_usage > 0 || (argc == 1))
     {
-        display_help(argv[0], " [options] infile(s)", "Program to Validate xSEED format files", args);
+        display_help(argv[0], " [options] infile(s)", "Program to validate xSEED format files", args);
         return display_usage < 2 ? EXIT_FAILURE : EXIT_SUCCESS;
     }
 
     if (display_revision)
     {
 
-        display_version(argv[0], "Program to Validate xSEED format files",
+        display_version(argv[0], "Program to validate xSEED format files",
                                  XSEEDVALIDATOR_VERSION_MAJOR,
                                  XSEEDVALIDATOR_VERSION_MINOR,
                                  XSEEDVALIDATOR_VERSION_PATCH);

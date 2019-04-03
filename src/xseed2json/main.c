@@ -92,7 +92,7 @@ main (int argc, char **argv)
   if (display_revision)
   {
 
-    display_version(argv[0], "Program to Print a xSEED file in JSON format",
+    display_version(argv[0], "Program to print a xSEED file in JSON format",
                              XSEED2JSON_VERSION_MAJOR,
                              XSEED2JSON_VERSION_MINOR,
                              XSEED2JSON_VERSION_PATCH);

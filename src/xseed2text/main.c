@@ -95,7 +95,7 @@ main (int argc, char **argv)
   if (display_revision)
   {
 
-    display_version(argv[0], "Program to Print a xSEED file in text format",
+    display_version(argv[0], "Program to print a xSEED file in text format",
                               XSEED2TEXT_VERSION_MAJOR,
                               XSEED2TEXT_VERSION_MINOR,
                               XSEED2TEXT_VERSION_PATCH);
