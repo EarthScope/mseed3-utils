@@ -79,7 +79,7 @@ main (int argc, char **argv)
 
   if (display_usage > 0 || (argc == 1))
   {
-    display_help (argv[0], " [options] infile(s)", "Program to Print a xSEED file in JSON format", args);
+    display_help (argv[0], " [options] infile(s)", "Program to print an xSEED file in JSON format", args);
     return display_usage < 2 ? EXIT_FAILURE : EXIT_SUCCESS;
   }
 
@@ -129,7 +129,7 @@ print_xseed_2_json (char *file_name, bool print_data, uint8_t verbose)
   flags |= MSF_UNPACKDATA;
   flags |= MSF_VALIDATECRC;
 
-  /* loop over all records in xseed file,
+  /* Loop over all records in input file,
    * Add 1 to verbose level as verbose = 1 prints nothing extra */
   while ((ms3_readmsr (&msr, file_name, 0, NULL, 0, verbose + 1) == MS_NOERROR))
   {
