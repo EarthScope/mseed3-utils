@@ -1,12 +1,12 @@
 #include <stdbool.h>
 #include <stdlib.h>
-#include <unpack.h>
-#include <xseed-common/cmd_opt.h>
-#include <xseed-common/files.h>
-#include <xseed-common/xseed_string.h>
 
 #include <libmseed.h>
 #include <parson.h>
+
+#include <xseed-common/cmd_opt.h>
+#include <xseed-common/files.h>
+#include <xseed-common/xseed_string.h>
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
 #include <xseed-common/vcs_getopt.h>
@@ -17,7 +17,7 @@
 
 #endif
 
-//CMD line option structure
+/* CMD line option structure */
 static const struct xseed_option_s args[] = {
     {'h', "help", "   Display usage information", NULL, NO_OPTARG},
     {'v', "verbose", "Verbosity level", NULL, OPTIONAL_OPTARG},
@@ -43,7 +43,7 @@ main (int argc, char **argv)
   char *file_name             = NULL;
   bool print_data             = false;
 
-  //parse command line args
+  /* parse command line args */
   xseed_get_short_getopt_string (&short_opt_string, args);
   xseed_get_long_getopt_array (&long_opt_array, args);
 
@@ -51,7 +51,6 @@ main (int argc, char **argv)
   {
     switch (opt)
     {
-    //int file_name_size;
     case 'd':
       print_data = true;
       break;
@@ -93,7 +92,7 @@ main (int argc, char **argv)
 
     if (!xseed_file_exists (file_name))
     {
-      printf ("Error reading file: %s, File Not Found! \n", file_name);
+      fprintf (stderr, "Error reading file: %s, File Not Found!\n", file_name);
       continue;
     }
 
@@ -106,275 +105,273 @@ main (int argc, char **argv)
 int
 print_xseed_2_json (char *file_name, bool print_data, uint8_t verbose)
 {
-
-  if (!xseed_file_exists (file_name))
-  {
-    printf ("Error: input file %s not found!", file_name);
-    return EXIT_FAILURE;
-  }
-
-  //libmseed vars
   MS3Record *msr    = NULL;
-  MS3Record *msrOut = NULL;
 
-  //parson vars
   JSON_Status ierr;
   JSON_Value *val         = NULL;
   JSON_Object *jsonObj    = NULL;
   JSON_Value *extraVal    = NULL;
   JSON_Array *payload_arr = NULL;
+  JSON_Object *flagsObj   = NULL;
 
-  //helper vars
-  char times[1024];
-  char hex[1024];
+  char string[1024];
+  char databuffer[MAXRECLEN];
   uint32_t flags = 0;
+  uint64_t records = 0;
 
-  //Set flag to unpack data and check CRC
+  if (!xseed_file_exists (file_name))
+  {
+    fprintf (stderr, "Error: input file %s not found!", file_name);
+    return EXIT_FAILURE;
+  }
+
+  /* Set flags to unpack data and check CRC */
   flags |= MSF_UNPACKDATA;
   flags |= MSF_VALIDATECRC;
 
-  //loop over all records in xseed file,
-  //Add 1 to verbose level as verbose = 1 prints nothing extra
+  /* loop over all records in xseed file,
+   * Add 1 to verbose level as verbose = 1 prints nothing extra */
   while ((ms3_readmsr (&msr, file_name, 0, NULL, 0, verbose + 1) == MS_NOERROR))
   {
-
-    if (!msr)
-      return EXIT_FAILURE;
-
     val     = json_value_init_object ();
     jsonObj = json_value_get_object (val);
 
-    /* Generate a start time string */
-    ms_nstime2timestr (msr->starttime, times, SEEDORDINAL, NANO_MICRO_NONE);
-
-    ierr = json_object_set_string (jsonObj, "sid", msr->sid);
+    ierr = json_object_set_string (jsonObj, "SID", msr->sid);
 
     if (ierr == JSONFailure)
     {
-      printf ("Something went wrong parsing to JSON : SID");
+      fprintf (stderr, "Something went wrong generating JSON : SID\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "pubversion", msr->pubversion);
+    ierr = json_object_set_number (jsonObj, "RecordLength", msr->reclen);
 
     if (ierr == JSONFailure)
     {
-      printf ("Something went wrong parsing to JSON : pubversion");
+      fprintf (stderr, "Something went wrong generating JSON : RecordLength\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "reclen", msr->reclen);
+    ierr = json_object_set_number (jsonObj, "FormatVersion", msr->formatversion);
 
     if (ierr == JSONFailure)
     {
-      printf ("Something went wrong parsing to JSON : reclen");
+      fprintf (stderr, "Something went wrong generating JSON : FormatVersion\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "reclen", msr->formatversion);
+    /* Add boolean entries for each big flag set */
+    if (msr->flags)
+    {
+      ierr = json_object_set_value (jsonObj, "Flags", json_value_init_object ());
+
+      if (ierr == JSONFailure)
+      {
+        fprintf (stderr, "Something went wrong generating JSON : Flags (Object)\n");
+        return EXIT_FAILURE;
+      }
+
+      flagsObj = json_object_get_object (jsonObj, "Flags");
+
+      if (ierr == JSONFailure)
+      {
+        fprintf (stderr, "Something went wrong getting JSON : Flags (Object)\n");
+        return EXIT_FAILURE;
+      }
+
+      if (ierr != JSONFailure && bit (msr->flags, 0x01))
+        ierr = json_object_set_boolean (flagsObj, "CalibrationSignalsPresent", 1);
+      if (ierr != JSONFailure && bit (msr->flags, 0x02))
+        ierr = json_object_set_boolean (flagsObj, "TimeTagQuestionable", 1);
+      if (ierr != JSONFailure && bit (msr->flags, 0x04))
+        ierr = json_object_set_boolean (flagsObj, "ClockLocked", 1);
+      if (ierr != JSONFailure && bit (msr->flags, 0x08))
+        ierr = json_object_set_boolean (flagsObj, "ReservedBit3", 1);
+      if (ierr != JSONFailure && bit (msr->flags, 0x10))
+        ierr = json_object_set_boolean (flagsObj, "ReservedBit4", 1);
+      if (ierr != JSONFailure && bit (msr->flags, 0x20))
+        ierr = json_object_set_boolean (flagsObj, "ReservedBit5", 1);
+      if (ierr != JSONFailure && bit (msr->flags, 0x40))
+        ierr = json_object_set_boolean (flagsObj, "ReservedBit6", 1);
+      if (ierr != JSONFailure && bit (msr->flags, 0x80))
+        ierr = json_object_set_boolean (flagsObj, "ReservedBit7", 1);
+
+      if (ierr == JSONFailure)
+      {
+        fprintf (stderr, "Something went wrong generating JSON : Flags values\n");
+        return EXIT_FAILURE;
+      }
+    }
+
+    ms_nstime2timestrz (msr->starttime, string, SEEDORDINAL, NANO_MICRO_NONE);
+    ierr = json_object_set_string (jsonObj, "StartTime", string);
 
     if (ierr == JSONFailure)
     {
-      printf ("Something went wrong parsing to JSON : formatversion");
+      fprintf (stderr, "Something went wrong generating JSON : StartTime\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "reclen", msr->formatversion);
+    ierr = json_object_set_number (jsonObj, "EncodingFormat", msr->encoding);
 
     if (ierr == JSONFailure)
     {
-      printf ("Something went wrong parsing to JSON : formatversion");
+      fprintf (stderr, "Something went wrong generating JSON : EncodingFormat\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_string (jsonObj, "starttime", times);
+    ierr = json_object_set_number (jsonObj, "SampleRate", msr3_sampratehz (msr));
 
     if (ierr == JSONFailure)
     {
-      printf ("Something went wrong parsing to JSON : starttime");
+      fprintf (stderr, "Something went wrong generating JSON : SampleRate\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "samplecnt", (double)msr->samplecnt);
+    ierr = json_object_set_number (jsonObj, "SampleCount", (double)msr->samplecnt);
 
     if (ierr == JSONFailure)
     {
-      printf ("Something went wrong parsing to JSON : formatversion");
+      fprintf (stderr, "Something went wrong generating JSON : SampleCount\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "samprate", msr3_sampratehz (msr));
+    sprintf (string, "0x%0X", msr->crc);
+    ierr = json_object_set_string (jsonObj, "CRC", string);
 
     if (ierr == JSONFailure)
     {
-      printf ("Something went wrong parsing to JSON : formatversion");
+      fprintf (stderr, "Something went wrong generating JSON : CRC\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "flags", msr->flags);
+    ierr = json_object_set_number (jsonObj, "PublicationVersion", msr->pubversion);
+
     if (ierr == JSONFailure)
     {
-      printf ("Something went wrong parsing to JSON : flags");
+      fprintf (stderr, "Something went wrong generating JSON : PublicationVersion\n");
       return EXIT_FAILURE;
     }
 
-    sprintf (hex, "0x%0X", (unsigned int)msr->crc);
-    ierr = json_object_set_string (jsonObj, "crc", hex);
+    ierr = json_object_set_number (jsonObj, "ExtraLength", msr->extralength);
 
     if (ierr == JSONFailure)
     {
-      printf ("Something went wrong parsing to JSON : crc");
+      fprintf (stderr, "Something went wrong generating JSON : ExtraLength\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "extralength", msr->extralength);
+    ierr = json_object_set_number (jsonObj, "DataLength", msr->datalength);
 
     if (ierr == JSONFailure)
     {
-      printf ("Something went wrong parsing to JSON : extralength");
-      return EXIT_FAILURE;
-    }
-
-    ierr = json_object_set_number (jsonObj, "datalength", msr->datalength);
-
-    if (ierr == JSONFailure)
-    {
-      printf ("Something went wrong parsing to JSON : datalength");
-      return EXIT_FAILURE;
-    }
-
-    ierr = json_object_set_string (jsonObj, "encoding", (char *)ms_encodingstr (msr->encoding));
-    if (ierr == JSONFailure)
-    {
-      printf ("Something went wrong parsing to JSON : encoding");
-      return EXIT_FAILURE;
-    }
-
-    ierr = json_object_set_number (jsonObj, "encodingval", msr->encoding);
-
-    if (ierr == JSONFailure)
-    {
-      printf ("Something went wrong parsing to JSON : encodingval");
+      fprintf (stderr, "Something went wrong generating JSON : DataLength\n");
       return EXIT_FAILURE;
     }
 
     if (msr->extralength > 0 && msr->extra)
     {
       extraVal = json_parse_string (msr->extra);
-      ierr     = json_object_set_value (jsonObj, "extra", extraVal);
+      ierr     = json_object_set_value (jsonObj, "ExtraHeaders", extraVal);
 
       if (ierr == JSONFailure)
       {
-        printf ("Something went wrong parsing to JSON : extra");
+        fprintf (stderr, "Something went wrong generating JSON : ExtraHeaders\n");
         return EXIT_FAILURE;
       }
     }
 
     if (print_data)
     {
-      if (msr->formatversion == 3)
-      {
-        if (verbose > 0)
-          printf ("Unpacking data for verification\n");
-        ierr = msr3_unpack_mseed3 (msr->record, msr->reclen, &msrOut, flags, verbose);
-        if (ierr != MS_NOERROR)
-        {
-          //TODO more verbose error output
-          printf ("Error: Format 3 payload parsing failed. ms_unpack_mseed3 returned: %d\n", ierr);
-          return EXIT_FAILURE;
-        }
-        else
-        {
+      ierr = msr3_unpack_data(msr, verbose);
 
-          if (verbose > 0)
-            printf ("Data unpacked successfully\n");
-        }
-      }
-      else
+      if (ierr < 0)
       {
-        printf ("Error: Format version not version 3, read as version: %d", msr->formatversion);
-        printf ("Attepting to parse as format 2");
-        ierr = msr3_unpack_mseed2 (msr->record, msr->reclen, &msrOut, flags, verbose);
-        if (ierr > 0)
-        {
-          printf ("Error: Format 2 payload parsing failed. ms_unpack_mseed2 returned: %d\n", ierr);
-          return EXIT_FAILURE;
-        }
+        fprintf (stderr, "Error: Payload parsing failed: %s\n", ms_errorstr(ierr));
+        return EXIT_FAILURE;
       }
 
-      if (msrOut->numsamples > 0 && msrOut != NULL)
+      if (verbose > 0)
+        fprintf (stderr, "Data unpacked successfully\n");
+
+      if (msr->numsamples > 0)
       {
         int samplesize;
         void *sptr;
 
-        if ((samplesize = ms_samplesize (msrOut->sampletype)) == 0)
+        if ((samplesize = ms_samplesize (msr->sampletype)) == 0)
         {
-          printf ("Unrecognized sample type: '%c'\n", msrOut->sampletype);
+          fprintf (stderr, "Unrecognized sample type: '%c'\n", msr->sampletype);
           return EXIT_FAILURE;
         }
-        if (msrOut->sampletype == 'a')
+        if (msr->sampletype == 'a')
         {
-          char *ascii = (char *)msrOut->datasamples;
-          //int length = msrOut->numsamples;
+          /* Text data payload is not NULL terminated, so copy and make a string */
+          memcpy (databuffer, msr->datasamples, msr->numsamples);
+          databuffer[msr->numsamples] = '\0';
 
-          ierr = json_object_set_string (jsonObj, "payload", ascii);
+          ierr = json_object_set_string (jsonObj, "Data", databuffer);
 
           if (ierr == JSONFailure)
           {
-            printf ("Something went wrong parsing to JSON : payload (ascii)");
+            fprintf (stderr, "Something went wrong generating JSON : Data (ASCII)\n");
             return EXIT_FAILURE;
           }
         }
         else
         {
+          ierr = json_object_set_value (jsonObj, "Data", json_value_init_array ());
 
-          json_object_set_value (jsonObj, "Payload", json_value_init_array ());
-          payload_arr = json_object_get_array (jsonObj, "Payload");
-
-          for (int i = 0; i < msrOut->numsamples; i++)
+          if (ierr == JSONFailure)
           {
-            sptr = (char *)msrOut->datasamples + (i * samplesize);
+            fprintf (stderr, "Something went wrong generating JSON : Data (Array)\n");
+            return EXIT_FAILURE;
+          }
 
-            if (msrOut->sampletype == 'i')
+          payload_arr = json_object_get_array (jsonObj, "Data");
+
+          for (int i = 0; i < msr->numsamples && ierr != JSONFailure; i++)
+          {
+            sptr = (char *)msr->datasamples + (i * samplesize);
+
+            if (msr->sampletype == 'i')
             {
-              json_array_append_number (payload_arr, *(int32_t *)sptr);
+              ierr = json_array_append_number (payload_arr, *(int32_t *)sptr);
             }
-            else if (msrOut->sampletype == 'f')
+            else if (msr->sampletype == 'f')
             {
-              json_array_append_number (payload_arr, *(float *)sptr);
+              ierr = json_array_append_number (payload_arr, *(float *)sptr);
             }
-            else if (msrOut->sampletype == 'd')
+            else if (msr->sampletype == 'd')
             {
-              json_array_append_number (payload_arr, *(double *)sptr);
+              ierr = json_array_append_number (payload_arr, *(double *)sptr);
             }
           }
 
           if (ierr == JSONFailure)
           {
-            printf ("Something went wrong parsing to JSON : payload (numeric)");
+            fprintf (stderr, "Something went wrong generating JSON : Data (numeric)\n");
             return EXIT_FAILURE;
           }
         }
       }
-
-      if (msrOut != NULL)
-        msr3_free (&msrOut);
     }
 
     char *full_string = json_serialize_to_string_pretty (val);
-    printf ("%s", full_string);
+    printf ("%s%s", (records == 0) ? "" : ",", full_string);
     json_free_serialized_string (full_string);
+
     if (print_data)
     {
       json_array_clear (payload_arr);
     }
-    json_value_free (val);
-  }
 
-  //if(msr != NULL)
-  //    msr3_free(&msr);
-  //Required to cleanup globals
-  ms3_readmsr (&msr, NULL, 0, 0, 0, 0);
+    json_value_free (val);
+    records += 1;
+  } /* End of loop over records */
+
+  if (msr)
+    ms3_readmsr (&msr, NULL, 0, 0, 0, 0);
 
   return EXIT_SUCCESS;
 }
