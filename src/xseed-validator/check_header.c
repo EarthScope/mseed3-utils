@@ -85,12 +85,12 @@ check_header (struct warn_options_s *options, FILE *input_file, long file_len, l
 
   if (ms_bigendianhost())
   {
-    if (verbose > 2)
+    if (verbose > 3)
       printf ("host is Big Endian, *Warning* untested\n");
   }
   else
   {
-    if (verbose > 2)
+    if (verbose > 3)
       printf ("host is Little Endian\n");
   }
 
@@ -120,7 +120,7 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
 {
   bool header_valid = true;
 
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Checking Header Signature value: %c%c\n", recordNum, buffer[0], buffer[1]);
 
   if (!(buffer[0] == 'M' && buffer[1] == 'S'))
@@ -135,7 +135,7 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
 
   //---Check format version---
   uint8_t formatVersion = (uint8_t)buffer[2];
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Checking File Version value: %d\n", recordNum, formatVersion);
 
   if (3 != formatVersion)
@@ -152,7 +152,7 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
   //---Check valid year---
   //uint16_t year = (uint8_t )buffer[8] | (uint8_t)buffer[9] << 8;
   uint16_t year = (uint8_t)buffer[8] + ((uint8_t)buffer[9] * (0xFF + 1));
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Checking Year value: %d\n", recordNum, year);
 
   if (year < 0 || year > 65535)
@@ -170,7 +170,7 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
   //---Check valid Day-of-Year---
   //uint16_t doy = (uint8_t )buffer[10] | (uint8_t)buffer[11] << 8;
   uint16_t doy = (uint8_t)buffer[10] + ((uint8_t)buffer[11] * (0xFF + 1));
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Checking Day of Year value: %d\n", recordNum, doy);
 
   if (366 < doy || 1 > doy)
@@ -186,7 +186,7 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
 
   //---Check valid hour range---
   uint8_t hours = (uint8_t)buffer[12];
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Checking Hours value: %d\n", recordNum, hours);
 
   if (hours < 0 || hours > 23)
@@ -201,7 +201,7 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
 
   //---Check valid min range---
   uint8_t mins = (uint8_t)buffer[13];
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Checking Mins value: %d\n", recordNum, mins);
 
   if (mins < 0 || mins > 59)
@@ -216,7 +216,7 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
 
   //---Check valid seconds range---
   uint8_t secs = (uint8_t)buffer[14];
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Checking Secs value: %d\n", recordNum, secs);
 
   if (secs < 0 || secs > 60)
@@ -236,7 +236,7 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
     ((uint8_t)buffer[6] * (0xFFFF + 1)) +
     ((uint8_t)buffer[7] * (0xFFFFFF + 1));
   //uint32_t nanoseconds = ((uint8_t)buffer[4] | ((uint8_t)buffer[5] << 8) | ((uint8_t)buffer[6] << 16) | ((uint8_t)buffer[7] << 24));
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Checking Nanoseconds value: %d\n", recordNum, nanoseconds);
 
   if (999999999 < nanoseconds)
@@ -252,7 +252,7 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
   //---Check for Payload type---
   uint8_t payload = (uint8_t)buffer[15];
   *payload_fmt    = payload;
-  if (verbose > 1)
+  if (verbose > 2)
   {
     printf ("Record: %d --- Checking Payload Flag: %d\n", recordNum, payload);
     printf ("Record: %d --- Payload Type: ", recordNum);
@@ -261,55 +261,55 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
   switch (payload)
   {
   case 0:
-    if (verbose > 1)
+    if (verbose > 2)
       printf ("Payload flag indicates ASCII/TEXT\n");
     break;
   case 1: /* 16-bit, integer, little-endian*/
-    if (verbose > 1)
+    if (verbose > 2)
       printf ("Payload flag indicates 16-bit, integer, little-endian\n");
     break;
   case 3: /* 32-bit, integer, little-endian*/
-    if (verbose > 1)
+    if (verbose > 2)
       printf ("Payload flag indicates 32-bit, integer, little-endian\n");
     break;
   case 4: /* IEEE 32-bit floats, little-endian */
-    if (verbose > 1)
+    if (verbose > 2)
       printf ("Payload flag indicates IEEE 32-bit floats, little-endian\n");
     break;
   case 5: /* IEEE 64-bit floats (double), little-endian */
-    if (verbose > 1)
+    if (verbose > 2)
       printf ("Payload flag indicates IEEE 64-bit floats (double), little-endian\n");
     break;
   case 10: /* Steim-1 integer compression, big-endian */
-    if (verbose > 1)
+    if (verbose > 2)
       printf ("Payload flag indicates Steim-1 integer compression, big-endian\n");
     break;
   case 11: /* Steim-2 integer compression, big-endian */
-    if (verbose > 1)
+    if (verbose > 2)
       printf ("Payload flag indicates Steim-2 integer compression, big-endian\n");
     break;
   case 19: /* Steim-3 integer compressin, big-endian */
-    if (verbose > 1)
+    if (verbose > 2)
       printf ("Payload flag indicates Steim-3 integer compression, big-endian\n");
     break;
   case 50: /* 16-bit integers, general compressor */
-    if (verbose > 1)
+    if (verbose > 2)
       printf ("Payload flag indicates 16-bit integers, general compressor\n");
     break;
   case 51: /* 32-bit integer, general compressor */
-    if (verbose > 1)
+    if (verbose > 2)
       printf ("Payload flag indicates 32-bit integer, general compressor\n");
     break;
   case 52: /* 32-bit IEEE floats, general compressor */
-    if (verbose > 1)
+    if (verbose > 2)
       printf ("32-bit IEEE floats, general compressor\n");
     break;
   case 53: /* 64-bit IEEE floats, general compressor */
-    if (verbose > 1)
+    if (verbose > 2)
       printf ("64-bit IEEE floats, general compressor\n");
     break;
   case 100: /* Opaque data */
-    if (verbose > 1)
+    if (verbose > 2)
       printf ("Opaque data\n");
     break;
   default: /* invalid payload type */
@@ -333,7 +333,7 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
     sample_rate = sample_rate * (-.01); //TODO ?????
   }
 
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Checking sample rate value: %f\n", recordNum, sample_rate);
 
   //Get Number of Samples
@@ -343,7 +343,7 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
       ((uint8_t)buffer[27] * (0xFFFFFF + 1));
   //uint32_t number_samples = ((uint8_t)buffer[24] | ((uint8_t)buffer[25] << 8) | ((uint8_t)buffer[26] << 16) | ((uint8_t)buffer[27] << 24));
 
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Checking number of samples value: %d\n", recordNum, number_samples);
 
   //Get CRC Value
@@ -351,29 +351,29 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
                  ((uint8_t)buffer[31] * (0xFFFFFF + 1));
   //uint32_t CRC = ((uint8_t)buffer[28]) | ((uint8_t)buffer[29] << 8) | ((uint8_t)buffer[30] << 16) | ((uint8_t)buffer[31]) << 24 ;
 
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- CRC value: 0x%0X\n", recordNum, CRC);
 
   //Get dataPubVersion
   //TODO Check for valid dataPubVersion
   uint8_t dataPubVersion = (uint8_t)buffer[32];
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Data Publication Version value: %d\n", recordNum, dataPubVersion);
 
   uint8_t identifier_l = (uint8_t)buffer[33];
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Identifier Length value: %d\n", recordNum, identifier_l);
 
   //Get lengths for extra header and payload
   uint16_t extra_header_l = (uint8_t)buffer[34] + ((uint8_t)buffer[35] * (0xFF + 1));
   //uint16_t extra_header_l = (uint8_t )buffer[34] | (uint8_t)buffer[35] << 8;
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Extra Header Length value: %d\n", recordNum, extra_header_l);
   //uint32_t payload_l = ((uint8_t)buffer[36] | ((uint8_t)buffer[37] << 8) | ((uint8_t)buffer[38] << 16) | ((uint8_t)buffer[39] << 24));
   uint32_t payload_l =
       (uint8_t)buffer[36] + ((uint8_t)buffer[37] * (0xFF + 1)) + ((uint8_t)buffer[38] * (0xFFFF + 1)) +
       ((uint8_t)buffer[39] * (0xFFFFFF + 1));
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Payload Length value: %d\n", recordNum, payload_l);
 
   //assign to output values

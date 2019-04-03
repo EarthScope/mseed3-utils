@@ -93,7 +93,7 @@ check_payloads (struct warn_options_s *options, FILE *input, uint32_t payload_le
     //TODO get status message
     if (msr->formatversion == 3)
     {
-      if (verbose > 1)
+      if (verbose > 2)
         printf ("Record: %d --- Unpacking data for verification\n", recordNum);
 
       ierr = msr3_unpack_mseed3 (msr->record, msr->reclen, &msrOut, flags, verbose);
@@ -112,7 +112,7 @@ check_payloads (struct warn_options_s *options, FILE *input, uint32_t payload_le
       }
       else
       {
-        if (verbose > 1)
+        if (verbose > 2)
           printf ("Record: %d --- Data unpacked successfully\n", recordNum);
       }
     }

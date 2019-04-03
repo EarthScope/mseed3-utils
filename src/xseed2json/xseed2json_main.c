@@ -307,7 +307,7 @@ print_xseed_2_json (char *file_name, bool print_data, uint8_t verbose)
         return EXIT_FAILURE;
       }
 
-      if (verbose > 0)
+      if (verbose > 1)
         fprintf (stderr, "Data unpacked successfully\n");
 
       if (msr->numsamples > 0)
