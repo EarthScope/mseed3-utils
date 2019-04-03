@@ -22,7 +22,7 @@ static const struct xseed_option_s args[] = {
     {'h', "help", "   Display usage information", NULL, NO_OPTARG},
     {'v', "verbose", "Verbosity level", NULL, OPTIONAL_OPTARG},
     {'d', "data", "   Print data payload", NULL, OPTIONAL_OPTARG},
-    {'V', "version","Print program version", NULL, OPTIONAL_OPTARG},
+    {'V', "version", "Print program version", NULL, OPTIONAL_OPTARG},
     {0, 0, 0, 0, 0}};
 
 /*! @brief Prints xSEED file contains in human readable format
@@ -39,11 +39,11 @@ main (int argc, char **argv)
   struct option *long_opt_array = NULL;
   int opt;
   int longindex;
-  unsigned char display_usage = 0;
+  unsigned char display_usage    = 0;
   unsigned char display_revision = 0;
-  uint8_t verbose             = 0;
-  bool print_data             = false;
-  char *file_name             = NULL;
+  uint8_t verbose                = 0;
+  bool print_data                = false;
+  char *file_name                = NULL;
 
   /* parse command line args */
   xseed_get_short_getopt_string (&short_opt_string, args);
@@ -95,13 +95,12 @@ main (int argc, char **argv)
   if (display_revision)
   {
 
-    display_version(argv[0], "Program to print a xSEED file in text format",
-                              XSEED2TEXT_VERSION_MAJOR,
-                              XSEED2TEXT_VERSION_MINOR,
-                              XSEED2TEXT_VERSION_PATCH);
+    display_version (argv[0], "Program to print a xSEED file in text format",
+                     XSEED2TEXT_VERSION_MAJOR,
+                     XSEED2TEXT_VERSION_MINOR,
+                     XSEED2TEXT_VERSION_PATCH);
     return EXIT_SUCCESS;
   }
-
 
   free (long_opt_array);
   free (short_opt_string);

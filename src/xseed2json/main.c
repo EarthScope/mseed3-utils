@@ -40,11 +40,11 @@ main (int argc, char **argv)
   struct option *long_opt_array = NULL;
   int opt;
   int longindex;
-  unsigned char display_usage = 0;
+  unsigned char display_usage    = 0;
   unsigned char display_revision = 0;
-  uint8_t verbose             = 0;
-  char *file_name             = NULL;
-  bool print_data             = false;
+  uint8_t verbose                = 0;
+  char *file_name                = NULL;
+  bool print_data                = false;
 
   /* parse command line args */
   xseed_get_short_getopt_string (&short_opt_string, args);
@@ -92,10 +92,10 @@ main (int argc, char **argv)
   if (display_revision)
   {
 
-    display_version(argv[0], "Program to print a xSEED file in JSON format",
-                             XSEED2JSON_VERSION_MAJOR,
-                             XSEED2JSON_VERSION_MINOR,
-                             XSEED2JSON_VERSION_PATCH);
+    display_version (argv[0], "Program to print a xSEED file in JSON format",
+                     XSEED2JSON_VERSION_MAJOR,
+                     XSEED2JSON_VERSION_MINOR,
+                     XSEED2JSON_VERSION_PATCH);
     return EXIT_SUCCESS;
   }
 
@@ -121,7 +121,7 @@ main (int argc, char **argv)
 int
 print_xseed_2_json (char *file_name, bool print_data, uint8_t verbose)
 {
-  MS3Record *msr    = NULL;
+  MS3Record *msr = NULL;
 
   JSON_Status ierr;
   JSON_Value *val         = NULL;
@@ -132,7 +132,7 @@ print_xseed_2_json (char *file_name, bool print_data, uint8_t verbose)
 
   char string[1024];
   char databuffer[MAXRECLEN];
-  uint32_t flags = 0;
+  uint32_t flags   = 0;
   uint64_t records = 0;
 
   if (!xseed_file_exists (file_name))
@@ -299,11 +299,11 @@ print_xseed_2_json (char *file_name, bool print_data, uint8_t verbose)
 
     if (print_data)
     {
-      ierr = msr3_unpack_data(msr, verbose);
+      ierr = msr3_unpack_data (msr, verbose);
 
       if (ierr < 0)
       {
-        fprintf (stderr, "Error: Payload parsing failed: %s\n", ms_errorstr(ierr));
+        fprintf (stderr, "Error: Payload parsing failed: %s\n", ms_errorstr (ierr));
         return EXIT_FAILURE;
       }
 
