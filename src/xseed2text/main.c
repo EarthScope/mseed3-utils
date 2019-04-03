@@ -104,7 +104,7 @@ main (int argc, char **argv)
      * Add 1 to verbose level as verbose = 1 prints nothing extra */
     while ((ms3_readmsr (&msr, file_name, 0, NULL, 0, verbose + 1) == MS_NOERROR))
     {
-      msr3_print (msr, verbose + 1);
+      msr3_print (msr, 2);
 
       if (print_data)
       {
