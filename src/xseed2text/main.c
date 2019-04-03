@@ -141,6 +141,8 @@ main (int argc, char **argv)
           uint64_t lines = (msr->numsamples / 6) + 1;
           void *sptr;
 
+          printf ("Data:\n");
+
           if ((samplesize = ms_samplesize (msr->sampletype)) == 0)
           {
             fprintf (stderr, "Unrecognized sample type: '%c'\n", msr->sampletype);
@@ -150,8 +152,6 @@ main (int argc, char **argv)
           {
             char *ascii     = (char *)msr->datasamples;
             uint64_t length = msr->numsamples;
-
-            printf ("ASCII Data:\n");
 
             /* Print maximum log message segments */
             while (length > (MAX_LOG_MSG_LENGTH - 1))
