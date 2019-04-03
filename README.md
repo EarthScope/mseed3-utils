@@ -57,6 +57,7 @@ Usage: ./xseed-validator [options] infile(s)
 	 -v verbose Verbosity level
 	 -d data    Print data payload
 	 -W         Option flag  *e.g* -W error,skip-payload
+         -V version Print program version
 ```
 
 
@@ -74,6 +75,7 @@ Usage: ./xseed2text [options] infile(s)
      -h help    Display usage information
      -v verbose Verbosity level
      -d data    Print data payload
+     -V version Print program version
 ```
 
 ## xSEED2JSON
@@ -90,6 +92,7 @@ Usage: ./xseed2json [options] infile(s)
      -h help    Display usage information
      -v verbose Verbosity level
      -d data    Print data payload
+     -V version Print program version
 ```
 
 
