@@ -1,7 +1,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <unpack.h>
 
 #include <libmseed.h>
 
@@ -18,7 +17,7 @@
 
 #endif
 
-//CMD line option structure
+/* CMD line option structure */
 static const struct xseed_option_s args[] = {
     {'h', "help", "   Display usage information", NULL, NO_OPTARG},
     {'v', "verbose", "Verbosity level", NULL, OPTIONAL_OPTARG},
@@ -31,14 +30,10 @@ static const struct xseed_option_s args[] = {
 int
 main (int argc, char **argv)
 {
-
-  //vars for parsing xSEED file and payload
-  MS3Record *msr    = NULL;
-  MS3Record *msrOut = NULL;
+  MS3Record *msr = NULL;
   int ierr;
   uint32_t flags = 0;
 
-  //vars to store command line options/args
   char *short_opt_string        = NULL;
   struct option *long_opt_array = NULL;
   int opt;
@@ -48,11 +43,11 @@ main (int argc, char **argv)
   bool print_data             = false;
   char *file_name             = NULL;
 
-  //parse command line args
+  /* parse command line args */
   xseed_get_short_getopt_string (&short_opt_string, args);
   xseed_get_long_getopt_array (&long_opt_array, args);
 
-  //Set flag to unpack data and check CRC
+  /* Set flags to unpack data and check CRC */
   flags |= MSF_UNPACKDATA;
   flags |= MSF_VALIDATECRC;
 
@@ -88,7 +83,7 @@ main (int argc, char **argv)
 
   if (display_usage > 0 || (argc == 1))
   {
-    display_help (argv[0], " [options] infile(s)", "Program to Print a xSEED file in text format", args);
+    display_help (argv[0], " [options] infile(s)", "Program to print an xSEED file in text format", args);
     return display_usage < 2 ? EXIT_FAILURE : EXIT_SUCCESS;
   }
 
@@ -101,71 +96,44 @@ main (int argc, char **argv)
 
     if (!xseed_file_exists (file_name))
     {
-      printf ("Error reading file: %s, File Not Found! \n", file_name);
+      fprintf (stderr, "Error reading file: %s, File Not Found! \n", file_name);
       continue;
     }
 
-    //Read in records
-    //Add 1 to verbose level as verbose = 1 prints nothing extra
+    /* loop over all records in intput file,
+     * Add 1 to verbose level as verbose = 1 prints nothing extra */
     while ((ms3_readmsr (&msr, file_name, 0, NULL, 0, verbose + 1) == MS_NOERROR))
     {
-      //Print header info
       msr3_print (msr, verbose + 1);
 
-      //The following code adapted from libmseed - msr3_parse(..)
-      //Print payload if enabled
       if (print_data)
       {
+        ierr = msr3_unpack_data (msr, verbose);
 
-        //If mimiSEEDv3
-        if (msr->formatversion == 3)
+        if (ierr < 0)
         {
-          if (verbose > 0)
-            printf ("Unpacking data for verification\n");
-
-          ierr = msr3_unpack_mseed3 (msr->record, msr->reclen, &msrOut, flags, verbose);
-          //ierr = msr3_parse(msr->record, msr->reclen,&msrOut, flags, verbose);
-          //ierr = ms_parse_raw3 (msr->record, msr->reclen, ppackets);
-          if (ierr != MS_NOERROR)
-          {
-            //TODO more verbose error output
-            printf ("Error: Format 3 payload parsing failed. ms_unpack_mseed3 returned: %d\n", ierr);
-            return EXIT_FAILURE;
-          }
-          else
-          {
-            if (verbose > 0)
-              printf ("Data unpacked successfully\n");
-          }
-        }
-        else //If older miniSEED format
-        {
-          printf ("Error: Format version not version 3, read as version: %d\n", msr->formatversion);
-          printf ("Attepting to parse as format 2");
-          ierr = msr3_unpack_mseed2 (msr->record, msr->reclen, &msrOut, flags, verbose);
-          if (ierr > 0)
-          {
-            printf ("Error: Format 2 payload parsing failed. ms_unpack_mseed2 returned: %d\n", ierr);
-            return EXIT_FAILURE;
-          }
+          fprintf (stderr, "Error: Payload parsing failed: %s\n", ms_errorstr (ierr));
+          return EXIT_FAILURE;
         }
 
-        //only attempt to print if data exists
-        if (msrOut->numsamples > 0)
+        if (verbose > 0)
+          fprintf (stderr, "Data unpacked successfully\n");
+
+        if (msr->numsamples > 0)
         {
           int line, col, cnt, samplesize;
-          uint64_t lines = (msrOut->numsamples / 6) + 1;
+          uint64_t lines = (msr->numsamples / 6) + 1;
           void *sptr;
 
-          if ((samplesize = ms_samplesize (msrOut->sampletype)) == 0)
+          if ((samplesize = ms_samplesize (msr->sampletype)) == 0)
           {
-            printf ("Unrecognized sample type: '%c'\n", msrOut->sampletype);
-            return -1;
+            fprintf (stderr, "Unrecognized sample type: '%c'\n", msr->sampletype);
+            return EXIT_FAILURE;
           }
-          if (msrOut->sampletype == 'a')
+          if (msr->sampletype == 'a')
           {
-            char *ascii     = (char *)msrOut->datasamples;
-            uint64_t length = msrOut->numsamples;
+            char *ascii     = (char *)msr->datasamples;
+            uint64_t length = msr->numsamples;
 
             printf ("ASCII Data:\n");
 
@@ -186,25 +154,24 @@ main (int argc, char **argv)
             {
               printf ("\n");
             }
-            //if samples are a number
           }
-          else
+          else /* If samples are non-ASCII, i.e. numbers */
           {
             for (cnt = 0, line = 0; line < lines; line++)
             {
               for (col = 0; col < 6; col++)
               {
-                if (cnt < msrOut->numsamples)
+                if (cnt < msr->numsamples)
                 {
-                  sptr = (char *)msrOut->datasamples + (cnt * samplesize);
+                  sptr = (char *)msr->datasamples + (cnt * samplesize);
 
-                  if (msrOut->sampletype == 'i')
+                  if (msr->sampletype == 'i')
                     printf ("%10d  ", *(int32_t *)sptr);
 
-                  else if (msrOut->sampletype == 'f')
+                  else if (msr->sampletype == 'f')
                     printf ("%10.8g  ", *(float *)sptr);
 
-                  else if (msrOut->sampletype == 'd')
+                  else if (msr->sampletype == 'd')
                     printf ("%10.10g  ", *(double *)sptr);
 
                   cnt++;
@@ -214,16 +181,11 @@ main (int argc, char **argv)
             }
           }
         }
-
-        if (msrOut != NULL)
-          msr3_free (&msrOut);
       }
-    }
+    } /* End of loop over records */
 
-    //if(msr != NULL)
-    //    msr3_free(&msr);
-    //Required to cleanup globals
-    ms3_readmsr (&msr, NULL, 0, 0, 0, 0);
+    if (msr)
+      ms3_readmsr (&msr, NULL, 0, 0, 0, 0);
   }
 
   return EXIT_SUCCESS;
