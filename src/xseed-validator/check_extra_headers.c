@@ -14,6 +14,7 @@
 
 static void schema_error_func (void *client, const char *format, ...);
 
+
 /*! @brief Check extra header using WJElement against a user provided schema
  *
  *  @param[in] options -W cmd line warn options (currently not implemented)
@@ -32,6 +33,7 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
   WJElement document_element;
   char *extraHeaderStr;
   bool valid_extra_header = true;
+  is_valid_gbl = valid_extra_header;
 
   char schema_buffer[SCHEMA_BUFFER_SIZE];
   char *buffer = (char *)calloc (extra_header_len + 1, sizeof (char));
@@ -100,7 +102,8 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
 
     /* Validate extra headers against schema */
     XplBool isValid = WJESchemaValidate (schema_element, document_element, errFunc, NULL, NULL, NULL);
-    if (!isValid)
+
+    if ((!isValid) || (!is_valid_gbl))
     {
       printf ("Error! Record: %d ---  Schema validation failed!\n", recordNum);
       valid_extra_header = false;
@@ -152,4 +155,5 @@ schema_error_func (void *client, const char *format, ...)
   vfprintf (stderr, format, ap);
   va_end (ap);
   fprintf (stderr, "\n");
+  is_valid_gbl = false;
 }
