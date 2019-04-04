@@ -28,8 +28,11 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
   uint32_t fail_count_file = 0;
   uint32_t recordNum       = 0;
   int file_len             = xseed_file_length (input);
-  
-  printf("Reading file %s\n", file_name);
+
+  if (verbose > 0)
+  {
+    printf("Reading file %s\n", file_name);
+  }
 
   if (verbose > 1)
   {
