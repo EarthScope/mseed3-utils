@@ -8,7 +8,7 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/xseed2text_config.h.in
 
 INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}")
 
-SET(SRCS main.c)
+SET(SRCS xseed2text_main.c)
 
 ADD_EXECUTABLE(xseed2text ${SRCS})
 TARGET_LINK_LIBRARIES(xseed2text xseed-common)
