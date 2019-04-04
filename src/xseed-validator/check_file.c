@@ -29,7 +29,7 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
   uint32_t recordNum       = 0;
   int file_len             = xseed_file_length (input);
   
-  printf("\nReading file %s\n", file_name);
+  printf("Reading file %s\n", file_name);
 
   if (verbose > 1)
   {
@@ -182,9 +182,9 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
     printf ("--- Completed Data Payload Verification ---\n");
   }
 
-  if (verbose > 0)
+  if (verbose > 1)
   {
-    printf("Completed processing %d records\n", recordNum);
+    printf("Completed processing %d record(s)\n", recordNum);
     //TODO needs to be conditional (valid_file)
   }
 

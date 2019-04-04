@@ -214,8 +214,6 @@ int main(int argc, char **argv)
 
         return EXIT_FAILURE;
     }
-
-    printf("xseed-validator SUCCESSFULLY validated %d file(s)\n\n", file_cnt);
     //return valid ? EXIT_SUCCESS : EXIT_FAILURE;
     return EXIT_SUCCESS;
 }
