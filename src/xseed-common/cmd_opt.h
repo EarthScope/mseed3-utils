@@ -41,4 +41,6 @@ extern int xseed_get_long_getopt_array(struct option **, const struct xseed_opti
 
 extern void display_help(char *program_name, char *usage, char *message, const struct xseed_option_s *opts);
 
+extern void display_version(char *program_name, char *message, int major, int minor, int patch);
+
 #endif /* __XSEED_COMMON_CMD_OPT_H__*/

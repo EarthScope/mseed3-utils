@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <libmseed.h>
+#include "xseed-validator_config.h"
 #include <xseed-common/cmd_opt.h>
 #include <xseed-common/files.h>
 #include "warnings.h"
@@ -27,6 +28,7 @@ static const struct xseed_option_s args[] = {
         {'v', "verbose", "Verbosity level",                           NULL, OPTIONAL_OPTARG},
         {'d', "data",    "   Print data payload",                     NULL, OPTIONAL_OPTARG},
         {'W', "       ", "Option flag  *e.g* -W error,skip-payload ", NULL, MANDATORY_OPTARG},
+        {'V', "version", "Print program version",                     NULL, OPTIONAL_OPTARG},
         {0,   0,         0, 0,                                              0}};
 
 /*! @brief Program to Validate xSEED format files
@@ -48,6 +50,7 @@ int main(int argc, char **argv)
     int opt;
     struct warn_options_s warn_options[1];
     unsigned char display_usage = 0;
+    unsigned char display_revision = 0;
 
     bool valid;
     FILE *file = NULL;
@@ -89,6 +92,9 @@ int main(int argc, char **argv)
             case 'h':
                 display_usage = 1;
                 break;
+            case 'V':
+                display_revision = 1;
+                break;
             case 'j':
                 schema_file_name = strndup(optarg, MAX_FILE_SIZE);
 
@@ -111,8 +117,18 @@ int main(int argc, char **argv)
 
     if (display_usage > 0 || (argc == 1))
     {
-        display_help(argv[0], " [options] infile(s)", "Program to Validate xSEED format files", args);
+        display_help(argv[0], " [options] infile(s)", "Program to validate xSEED format files", args);
         return display_usage < 2 ? EXIT_FAILURE : EXIT_SUCCESS;
+    }
+
+    if (display_revision)
+    {
+
+        display_version(argv[0], "Program to validate xSEED format files",
+                                 XSEEDVALIDATOR_VERSION_MAJOR,
+                                 XSEEDVALIDATOR_VERSION_MINOR,
+                                 XSEEDVALIDATOR_VERSION_PATCH);
+        return EXIT_SUCCESS;
     }
 
     free(long_opt_array);
