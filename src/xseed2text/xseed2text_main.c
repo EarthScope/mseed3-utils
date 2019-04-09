@@ -131,7 +131,7 @@ main (int argc, char **argv)
           return EXIT_FAILURE;
         }
 
-        if (verbose > 0)
+        if (verbose > 1)
           fprintf (stderr, "Data unpacked successfully\n");
 
         if (msr->numsamples > 0)

@@ -27,5 +27,4 @@ check_payloads(struct warn_options_s *options, FILE *input, uint32_t payload_len
 bool check_payload_text(struct warn_options_s *options, uint32_t payload_len, char *buffer);
 
 bool is_valid_gbl;
-
 #endif /* __XSEEDVALIDATOR_VALIDATOR_H__ */
