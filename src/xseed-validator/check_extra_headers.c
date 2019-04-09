@@ -60,7 +60,7 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
 
   if (extra_header_len == 0)
   {
-    if (verbose > 0)
+    if (verbose > 1)
       printf ("Record: %d --- This record does not contain an extra header\n", recordNum);
 
     free (buffer);
@@ -73,7 +73,7 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
 
     if (document_element != NULL)
     {
-      if (verbose > 2)
+      if (verbose > 3)
       {
         //TODO make optional
         extraHeaderStr = WJEToString (document_element, true);
@@ -117,7 +117,7 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
     else
     {
 
-      if (verbose > 1)
+      if (verbose > 2)
         printf ("Record: %d --- JSON Schema validation success!\n", recordNum);
     }
 
@@ -128,7 +128,7 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
   } // if no schema file provided
   else
   {
-    if (verbose > 0 && extra_header_len > 0)
+    if (verbose > 1 && extra_header_len > 0)
       printf ("Record: %d --- No json schema file provided, skipping Extra Header check\n", recordNum);
   }
   /*TODO other checks */
