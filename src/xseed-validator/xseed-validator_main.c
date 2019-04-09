@@ -22,7 +22,7 @@
 
 #define MAX_FILE_SIZE 1024
 
-//CMD line option structure
+/* CMD line option structure */
 static const struct xseed_option_s args[] = {
     {'h', "help", "   Display usage information", NULL, NO_OPTARG},
     {'j', "schema", "   File containing JSON Schema", NULL, MANDATORY_OPTARG},
@@ -44,7 +44,7 @@ main (int argc, char **argv)
   char *schema_file_name = NULL;
   int32_t fail_cnt       = 0;
 
-  //vars to store command line options/args
+  /* vars to store command line options/args */
   char *short_opt_string        = NULL;
   struct option *long_opt_array = NULL;
   int opt;
@@ -60,14 +60,14 @@ main (int argc, char **argv)
 
   char **files = malloc (argc * sizeof (char *));
 
-  //For warning options - TODO Need payload skipping option
+  /* For warning options - TODO Need payload skipping option */
   memset (warn_options, 0, sizeof (struct warn_options_s));
 
-  //parse command line args
+  /* parse command line args */
   xseed_get_short_getopt_string (&short_opt_string, args);
   xseed_get_long_getopt_array (&long_opt_array, args);
 
-  //Get usage options TODO in progress
+  /* Get usage options TODO in progress */
   int longindex;
   while (-1 != (opt = getopt_long (argc, argv, short_opt_string, long_opt_array, &longindex)))
   {
@@ -158,6 +158,7 @@ main (int argc, char **argv)
       printf ("Error reading file: %s, fopen failure \n", file_name);
       continue;
     }
+
     // run verification tests
     // TODO keep tally of failures
     valid = check_file (warn_options, file, schema_file_name, file_name, &record_cnt, print_data, verbose);
@@ -190,11 +191,9 @@ main (int argc, char **argv)
   {
     printf ("\n----------------------------------------------------------\n");
   }
-#if defined(_WIN32) || defined(__APPLE__)
-  printf ("*xseed-validator COMPLETE - %lld record(s) processed in %d file(s)*\n", record_total, file_cnt);
-#else
-  printf ("xseed-validator COMPLETE - %ld record(s) processed in %d file(s)\n", record_total, file_cnt);
-#endif
+
+  printf ("xseed-validator COMPLETE - %" PRId64 " record(s) processed in %d file(s)\n", record_total, file_cnt);
+
   if (fail_cnt != 0)
   {
     printf ("xseed-validator FAILED to validate %d file(s) out of the %d file(s) processed\n", fail_cnt, file_cnt);
@@ -211,6 +210,6 @@ main (int argc, char **argv)
 
     return EXIT_FAILURE;
   }
-  //return valid ? EXIT_SUCCESS : EXIT_FAILURE;
+
   return EXIT_SUCCESS;
 }
