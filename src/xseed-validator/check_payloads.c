@@ -21,59 +21,6 @@ check_payloads (struct warn_options_s *options, FILE *input, uint32_t payload_le
 {
   bool answer = true;
 
-#if 0
-    //TODO incomplete, solution to verify data payload without libmseed functions
-    char *buffer = (char *) calloc(payload_len +1, sizeof(char));
-    if (payload_len > fread(buffer, sizeof(char), payload_len, input))
-    {
-        printf("Error! Record: %d ---  failed to read record data payload into buffer\n",recordNum);
-        answer = false;
-        if(options->treat_as_errors)
-        {
-            return answer;
-        }
-    }
-
-
-    if(options->skip_payload)
-    {
-        return false;
-    }
-
-#if 0
-
-    switch (payload_fmt)
-    {
-        case 0: /* text */
-            /* if this was succesfull but already made false we need to keep */
-            answer = check_payload_text(options, payload_len, buffer)? answer : false;
-            break;
-        case 1: /* 16-bit, integer, little-endian*/
-        case 3: /* 32-bit, integer, little-endian*/
-        case 4: /* IEEE 32-bit floats, little-endian */
-        case 5: /* IEEE 64-bit floats (double), little-endian */
-        case 10: /* Steim-1 integer compressin, big-endian */
-        case 11: /* Steim-2 integer compressin, big-endian */
-        case 19: /* Steim-3 integer compressin, big-endian */
-        case 53: /* 32-bit integer, little-endian, general compressor */
-        case 54: /* 32-bit IEEE floats, little-endian, general compressor */
-        case 55: /* 64-bit IEEE floats, little-endian, general compressor */
-            break;
-        default:
-            /* invalid payload type */
-            answer = false;
-            break;
-    }
-#endif
-    if (buffer)
-    {
-        free(buffer);
-    }
-    //End of incomplete solution, see prev TODO
-
-    //Solution using libmseed builtin functions to
-#endif
-
   //Decode and check using libmseed's functions
   MS3Record *msr    = NULL;
   MS3Record *msrOut = NULL;
@@ -88,8 +35,6 @@ check_payloads (struct warn_options_s *options, FILE *input, uint32_t payload_le
   recordNum = 0;
   while ((ms3_readmsr (&msr, file_name, 0, NULL, 0, verbose) == MS_NOERROR))
   {
-    //msr3_print (msr, verbose);
-
     //TODO get status message
     if (msr->formatversion == 3)
     {
@@ -97,8 +42,6 @@ check_payloads (struct warn_options_s *options, FILE *input, uint32_t payload_le
         printf ("Record: %d --- Unpacking data for verification\n", recordNum);
 
       ierr = msr3_unpack_mseed3 (msr->record, msr->reclen, &msrOut, flags, verbose);
-      //ierr = msr3_parse(msr->record, msr->reclen,&msrOut, flags, ppackets);
-      //ierr = ms_parse_raw3 (msr->record, msr->reclen, ppackets);
       if (ierr != MS_NOERROR)
       {
         //TODO more verbose error output
@@ -207,10 +150,9 @@ check_payloads (struct warn_options_s *options, FILE *input, uint32_t payload_le
       msr3_free (&msrOut);
   }
 
-  //    if(msr != NULL)
-  //        msr3_free(&msr);
-  //Required to cleanup globals
-  ms3_readmsr (&msr, NULL, 0, 0, 0, 0);
+  /* Required to cleanup globals */
+  if (msr != NULL)
+    ms3_readmsr (&msr, NULL, 0, 0, 0, 0);
 
   return answer;
 }
