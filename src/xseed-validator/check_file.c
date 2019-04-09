@@ -1,11 +1,13 @@
-#include "validator.h"
-#include "warnings.h"
-#include <libmseed.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <unpack.h>
+
 #include <xseed-common/files.h>
+
+#include <libmseed.h>
+
+#include "validator.h"
+#include "warnings.h"
 
 /*! @brief Top level function to perform all verification tests on input xSEED file
  *
