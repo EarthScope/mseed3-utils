@@ -135,9 +135,6 @@ int main(int argc, char **argv)
     free(short_opt_string);
 
 
-    printf("\n**********xseed-validator STARTING validation**********");
-    printf("\n---------------------------------------------------------\n");
-
     while (argc > optind)
     {
         record_cnt = 0;
@@ -173,7 +170,10 @@ int main(int argc, char **argv)
 
         if (valid)
         {
-            printf("xseed-validator RESULT - file %s is VALID xSEED\n", file_name);
+            if (verbose > 0)
+            {
+              printf("xseed-validator RESULT - file %s is VALID xSEED\n", file_name);
+            }
         } else
         {
             printf("xseed-validator RESULT - file %s is **NOT** VALID xSEED\n", file_name);
@@ -183,24 +183,26 @@ int main(int argc, char **argv)
         }
     }
 
-
     if (schema_file_name)
     {
         free(schema_file_name);
     }
 
     //Final program output
-    printf("\n----------------------------------------------------------\n");
+    if (verbose > 0)
+    {
+      printf("\n----------------------------------------------------------\n");
+    }
 #if defined(_WIN32) || defined(__APPLE__)
     printf("*xseed-validator COMPLETE - %lld record(s) processed in %d file(s)*\n", record_total, file_cnt);
 #else
-    printf("*xseed-validator COMPLETE - %ld record(s) processed in %d file(s)*\n", record_total, file_cnt);
+    printf("xseed-validator COMPLETE - %ld record(s) processed in %d file(s)\n", record_total, file_cnt);
 #endif
     if (fail_cnt != 0)
     {
-        printf("*xseed-validator FAILED to validate %d file(s) out of the %d file(s) processed*\n", fail_cnt, file_cnt);
+        printf("xseed-validator FAILED to validate %d file(s) out of the %d file(s) processed\n", fail_cnt, file_cnt);
 
-        printf("***Offending file(s)***:\n");
+        printf("Offending file(s):\n");
         for (int i = 0; i < fail_cnt; i++)
         {
             printf("%s\n", files[i]);
@@ -212,9 +214,6 @@ int main(int argc, char **argv)
 
         return EXIT_FAILURE;
     }
-
-
-    printf("****xseed-validator SUCCESSFULLY validated %d file(s)****\n\n", file_cnt);
     //return valid ? EXIT_SUCCESS : EXIT_FAILURE;
     return EXIT_SUCCESS;
 }

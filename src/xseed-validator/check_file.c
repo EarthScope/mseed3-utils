@@ -29,9 +29,12 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
   uint32_t recordNum       = 0;
   int file_len             = xseed_file_length (input);
 
-  printf ("\nReading file %s\n", file_name);
-
   if (verbose > 0)
+  {
+    printf("Reading file %s\n", file_name);
+  }
+
+  if (verbose > 1)
   {
     printf ("Record length of %d found, starting verification...\n", file_len);
   }
@@ -51,7 +54,7 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
     uint8_t payload_fmt       = 0;
 
     //----Check fixed header-----
-    if (verbose > 1)
+    if (verbose > 2)
     {
       printf ("--- Starting Fixed Header verification for record: %d ---\n", recordNum);
     }
@@ -59,7 +62,7 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
     valid_header = check_header (options, input, file_len, &file_pos, &identifier_len, &extra_header_len,
                                  &payload_len, &payload_fmt, recordNum, verbose);
 
-    if (valid_header && verbose > 0)
+    if (valid_header && verbose > 1)
     {
       printf ("Record: %d --- Fixed Header is valid!\n", recordNum);
     }
@@ -86,7 +89,7 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
     }
 
     //----Check extra headers-----
-    if (verbose > 1)
+    if (verbose > 2)
     {
       printf ("--- Completed Header verification for record: %d ---\n", recordNum);
       printf ("--- Starting Extra Header verification for record: %d ---\n", recordNum);
@@ -94,7 +97,7 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
 
     valid_extra_header = check_extra_headers (options, schema_file_name, input, extra_header_len, recordNum,
                                               verbose);
-    if (valid_extra_header && schema_file_name != NULL && extra_header_len > 0 && verbose > 0)
+    if (valid_extra_header && schema_file_name != NULL && extra_header_len > 0 && verbose > 1)
     {
       printf ("Record: %d --- Extra Header is valid!\n", recordNum);
     }
@@ -108,7 +111,7 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
       fail_count_rcd = fail_count_rcd + 1;
     }
 
-    if (verbose > 1)
+    if (verbose > 2)
     {
       printf ("--- Completed Extra Header verification for record: %d ---\n", recordNum);
     }
@@ -139,7 +142,7 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
 
     if (buffer)
     {
-      free (buffer);
+      free(buffer);
     }
 
     recordNum = recordNum + 1;
@@ -148,7 +151,7 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
   //----Check Payload content via libmseed functions-----
   if (!options->skip_payload)
   {
-    if (verbose > 1)
+    if (verbose > 2)
     {
       printf ("--- Started Data Payload Verification for %d records ---\n", recordNum);
     }
@@ -156,7 +159,7 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
     valid_payload = check_payloads (options, input, 0, 0, file_name, recordNum, print_data, verbose);
     if (valid_payload)
     {
-      if (verbose > 0)
+      if (verbose > 1)
         printf ("--- Payloads are valid! ---\n");
     }
     else
@@ -171,16 +174,22 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
   }
   else
   {
-    printf ("Payload validation skipped by user\n");
+    if (verbose > 0)
+    {
+      printf("Payload validation skipped by user\n");
+    }
   }
 
-  if (verbose > 1)
+  if (verbose > 2)
   {
     printf ("--- Completed Data Payload Verification ---\n");
   }
 
-  printf ("*** Completed processing %d records ***\n", recordNum);
-  //TODO needs to be conditional (valid_file)
+  if (verbose > 1)
+  {
+    printf("Completed processing %d record(s)\n", recordNum);
+    //TODO needs to be conditional (valid_file)
+  }
 
   *records = recordNum;
 

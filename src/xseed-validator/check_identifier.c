@@ -26,7 +26,7 @@ check_identifier (struct warn_options_s *options, FILE *input, uint8_t identifie
     return output;
   }
 
-  if (verbose > 1)
+  if (verbose > 2)
     printf ("Record: %d --- Checking source identifier URN: %s\n", recordNum, buffer);
 
   //TODO test value
