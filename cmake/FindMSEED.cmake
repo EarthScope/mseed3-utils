@@ -12,26 +12,38 @@
 
 INCLUDE(CheckFunctionExists)
 
+IF(NOT DEFINED MSEED_BUILD)
+   SET(MSEED_BUILD ON)
+ENDIF(NOT DEFINED MSEED_BUILD)
+   
+UNSET(MSEED_SEARCH_PATHS CACHE)
+IF(MSEED_BUILD)
+    UNSET(MSEED_VERSION CACHE)
+    UNSET(MSEED_INCLUDE_DIR CACHE)
+    UNSET(MSEED_FOUND CACHE)
+    UNSET(MSEED_LIBRARY CACHE)
+    SET (MSEED_SEARCH_PATHS
+        "${CMAKE_CURRENT_BINARY_DIR}/libsrc/libmseed/src/MSEED_LIBRARY-build"
+        "/usr/\n"
+        "/usr/local/")
+ELSE(MSEED_BUILD)
+   SET (MSEED_SEARCH_PATHS
+        "/usr/"
+        "/usr/local/")
+ENDIF(MSEED_BUILD)
 
 
-
-unset(MSEED_INCLUDE_DIR CACHE)
 FIND_PATH(MSEED_INCLUDE_DIR
         NAMES libmseed.h
-        PATHS /usr/
-              /usr/local/
-        ${CMAKE_CURRENT_BINARY_DIR}/libsrc/libmseed/src/MSEED_LIBRARY-build
+        PATHS ${MSEED_SEARCH_PATHS} NO_DEFAULT_PATH
         PATH_SUFFIXES include)
-
 
 SET(MSEED_NAMES ${MSEED_NAMES} mseed)
 
-unset(MSEED_LIBRARY CACHE)
+
 FIND_LIBRARY(MSEED_LIBRARY
     NAMES ${MSEED_NAMES}
-    PATHS /usr/
-          /usr/local/
-        ${CMAKE_CURRENT_BINARY_DIR}/libsrc/libmseed/src/MSEED_LIBRARY-build
+    PATHS ${MSEED_SEARCH_PATHS} NO_DEFAULT_PATH
     PATH_SUFFIXES lib)
 
 
@@ -47,18 +59,21 @@ IF (MSEED_LIBRARY AND MSEED_INCLUDE_DIR)
 
 ENDIF (MSEED_LIBRARY AND MSEED_INCLUDE_DIR)
 
+
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(MSEED FOUND_VAR MSEED_FOUND
     REQUIRED_VARS MSEED_LIBRARY MSEED_INCLUDE_DIR
     VERSION_VAR MSEED_VERSION)
 
-
 MARK_AS_ADVANCED(MSEED_LIBRARY MSEED_INCLUDE_DIR)
 IF (MSEED_FOUND)
+    MESSAGE("Using MSEED library FOUND: " ${MSEED_LIBRARY})
     SET(MSEED_LIBRARIES ${MSEED_LIBRARY} "-lm")
     SET(MSEED_INCLUDE_DIRS ${MSEED_INCLUDE_DIR})
     MARK_AS_ADVANCED(MSEED_ROOT)
 ELSE(MSEED_FOUND)
-    MESSAGE("*NOTE*: Manually install libmseed to system directory \n                     ---OR--- ")
-    MESSAGE("        Type 'make' to download a local copy of libmseed to the local project folder")
+   MESSAGE("  Install valid libmseed to system directory")
+   IF(MSEED_BUILD)
+       MESSAGE("--OR--\n  Type 'make' to download a local copy of libmseed to the local project folder")
+   ENDIF(MSEED_BUILD)
 ENDIF (MSEED_FOUND)
