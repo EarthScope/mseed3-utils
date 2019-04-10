@@ -9,7 +9,7 @@
 bool check_file(struct warn_options_s *options, FILE *input, char *schema_file_name,
                 char *file_name, uint32_t *records, bool print_data, uint8_t verbose);
 
-bool check_header(struct warn_options_s *options, FILE *input_file, long file_len, long *file_pos,
+bool check_header(struct warn_options_s *options, FILE *input_file, long file_len, int64_t *file_pos,
                   uint8_t *identifier_len, uint16_t *extra_header_len, uint32_t *payload_len,
                   uint8_t *payload_fmt, uint32_t recordNum, int8_t verbose);
 

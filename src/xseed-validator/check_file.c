@@ -29,6 +29,7 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
   uint32_t fail_count_rcd  = 0;
   uint32_t fail_count_file = 0;
   uint32_t recordNum       = 0;
+  int64_t file_pos         = 0;
   int file_len             = xseed_file_length (input);
 
   if (verbose > 0)
@@ -48,7 +49,7 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
   }
 
   /* Loop through all records in the provided file and validate content */
-  for (long file_pos = ftell (input); file_len > file_pos; file_pos = ftell (input))
+  for (file_pos = lmp_ftell64 (input); file_len > file_pos; file_pos = lmp_ftell64 (input))
   {
     uint8_t identifier_len    = 0;
     uint16_t extra_header_len = 0;
