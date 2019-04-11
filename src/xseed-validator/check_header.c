@@ -10,8 +10,6 @@
 #include "validator.h"
 #include "warnings.h"
 
-#define XSEED_STATIC_HEADER_LEN 40
-
 /*!
 
 @brief Validates a xSEED Version 3 Header
@@ -74,9 +72,9 @@ check_header (struct warn_options_s *options, FILE *input_file, long file_len, i
 {
 
   bool header_valid;
-  char buffer[XSEED_STATIC_HEADER_LEN];
+  char buffer[XSEED_FIXED_HEADER_LEN];
 
-  if (XSEED_STATIC_HEADER_LEN != fread ((void *)buffer, sizeof (char), XSEED_STATIC_HEADER_LEN, input_file))
+  if (XSEED_FIXED_HEADER_LEN != fread ((void *)buffer, sizeof (char), XSEED_FIXED_HEADER_LEN, input_file))
   {
     printf ("Fatal Error! Record: %d --- File size mismatch, check input record\n", recordNum);
     header_valid = false;
@@ -264,11 +262,11 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
     if (verbose > 2)
       printf ("Payload flag indicates ASCII/TEXT\n");
     break;
-  case 1: /* 16-bit, integer, little-endian*/
+  case 1: /* 16-bit, integer, little-endian */
     if (verbose > 2)
       printf ("Payload flag indicates 16-bit, integer, little-endian\n");
     break;
-  case 3: /* 32-bit, integer, little-endian*/
+  case 3: /* 32-bit, integer, little-endian */
     if (verbose > 2)
       printf ("Payload flag indicates 32-bit, integer, little-endian\n");
     break;

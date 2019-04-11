@@ -27,10 +27,12 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
   bool valid_payload      = false;
 
   uint32_t fail_count_rcd  = 0;
-  uint32_t fail_count_file = 0;
   uint32_t recordNum       = 0;
   int64_t file_pos         = 0;
   int file_len             = xseed_file_length (input);
+
+  MS3Record *msr = NULL;
+  char recordbuffer[MAXRECLEN];
 
   if (verbose > 0)
   {
@@ -55,8 +57,10 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
     uint16_t extra_header_len = 0;
     uint32_t payload_len      = 0;
     uint8_t payload_fmt       = 0;
+    uint64_t record_len       = 0;
+    bool can_check_payload    = false;
 
-    //----Check fixed header-----
+    /* ----Check fixed header----- */
     if (verbose > 2)
     {
       printf ("--- Starting Fixed Header verification for record: %d ---\n", recordNum);
@@ -76,10 +80,10 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
       {
         return false;
       }
-      fail_count_rcd = fail_count_rcd + 1;
+      fail_count_rcd += 1;
     }
 
-    //----Check identifier-----
+    /* ----Check identifier----- */
     valid_ident = check_identifier (options, input, identifier_len, recordNum, verbose);
     if (!valid_ident)
     {
@@ -88,10 +92,10 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
       {
         return false;
       }
-      fail_count_rcd = fail_count_rcd + 1;
+      fail_count_rcd += 1;
     }
 
-    //----Check extra headers-----
+    /* ----Check extra headers----- */
     if (verbose > 2)
     {
       printf ("--- Completed Header verification for record: %d ---\n", recordNum);
@@ -111,7 +115,7 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
       {
         return false;
       }
-      fail_count_rcd = fail_count_rcd + 1;
+      fail_count_rcd += 1;
     }
 
     if (verbose > 2)
@@ -119,73 +123,85 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
       printf ("--- Completed Extra Header verification for record: %d ---\n", recordNum);
     }
 
-    //----Initial payload check: length only-----
-    //-----Need to read off the buffer to keep things moving
-    //TODO check payload via buffer, for now payloads are checked via libmseed after all headers are checked
-    //Check payload length
-    char *buffer = (char *)calloc (payload_len + 1, sizeof (char));
-
-    if (buffer == NULL)
+    /* ----Check data payload headers----- */
+    if (payload_len > 0)
     {
-      printf ("Fatal Error! Record: %d --- could not calloc buffer\n", recordNum);
-      return false;
-    }
+      /* Calculate record length and check that it is within libmseed limits */
+      record_len        = XSEED_FIXED_HEADER_LEN + identifier_len + extra_header_len + payload_len;
+      can_check_payload = (record_len <= MAXRECLEN);
 
-    if (payload_len > fread (buffer, sizeof (char), payload_len, input))
-    {
-      printf ("Fatal Error! Record: %d ---  failed to read record data payload into buffer\n", recordNum);
-      valid_payload = false;
-      //if(options->treat_as_errors)
-      //{
-      return false;
-      //}
-    }
+      if (!options->skip_payload && can_check_payload)
+      {
+        if (verbose > 2)
+        {
+          printf ("--- Starting Data Payload verification for record: %d ---\n", recordNum);
+        }
 
-    //TODO validate payload using the buffer contains
+        /* Reposition file position to beginning of record and read into buffer */
+        lmp_fseek64 (input, file_pos, SEEK_SET);
 
-    if (buffer)
-    {
-      free(buffer);
-    }
+        if (record_len != fread (recordbuffer, sizeof (char), record_len, input))
+        {
+          printf ("Fatal Error! Record: %d --- File size mismatch, check input record\n", recordNum);
+          fail_count_rcd += 1;
+        }
+
+        /* Parse record with libmseed */
+        else if (msr3_parse (recordbuffer, MAXRECLEN, &msr, 0, verbose))
+        {
+          printf ("Fatal Error! Record: %d --- [libmseed] Could not parse record\n", recordNum);
+          fail_count_rcd += 1;
+        }
+
+        /* Unpack data samples, aka payload */
+        else
+        {
+          int samples = msr3_unpack_data (msr, verbose);
+
+          valid_payload = (samples <= 0) ? false : true;
+
+          if (valid_payload)
+          {
+            if (verbose > 1)
+              printf ("Record: %d --- Data Payload is valid!\n", recordNum);
+          }
+          else
+          {
+            printf ("Error! Record: %d --- Data Payload is not valid!\n", recordNum);
+            if (options->treat_as_errors)
+            {
+              return false;
+            }
+            fail_count_rcd += 1;
+          }
+        }
+      }
+      else
+      {
+        /* Skip payload if not checking it */
+        lmp_fseek64 (input, payload_len, SEEK_CUR);
+
+        if (verbose > 0)
+        {
+          if (!can_check_payload)
+            printf ("Cannot check payload of record length %" PRId64 "\n", record_len);
+          else
+            printf ("Payload validation skipped by user\n");
+        }
+      }
+
+      if (verbose > 2)
+      {
+        printf ("--- Completed Data Payload verification for record: %d ---\n", recordNum);
+      }
+    } /* End of payload check */
 
     recordNum = recordNum + 1;
-  } //End of buffer input for-loop
+  } /* End of buffer input for-loop */
 
-  //----Check Payload content via libmseed functions-----
-  if (!options->skip_payload)
+  if (msr)
   {
-    if (verbose > 2)
-    {
-      printf ("--- Started Data Payload Verification for %d records ---\n", recordNum);
-    }
-
-    valid_payload = check_payloads (options, input, 0, 0, file_name, recordNum, print_data, verbose);
-    if (valid_payload)
-    {
-      if (verbose > 1)
-        printf ("--- Payloads are valid! ---\n");
-    }
-    else
-    {
-      printf ("Error! --- Payloads are not valid!\n");
-      if (options->treat_as_errors)
-      {
-        return false;
-      }
-      fail_count_file = fail_count_file + 1;
-    }
-  }
-  else
-  {
-    if (verbose > 0)
-    {
-      printf("Payload validation skipped by user\n");
-    }
-  }
-
-  if (verbose > 2)
-  {
-    printf ("--- Completed Data Payload Verification ---\n");
+    msr3_free (&msr);
   }
 
   if (verbose > 1)
@@ -196,7 +212,7 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
 
   *records = recordNum;
 
-  if (fail_count_rcd == 0 && fail_count_file == 0)
+  if (fail_count_rcd == 0)
     return true;
   else
     return false;

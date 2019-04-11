@@ -4,7 +4,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+
 #include "warnings.h"
+
+#define XSEED_FIXED_HEADER_LEN 40
 
 bool check_file(struct warn_options_s *options, FILE *input, char *schema_file_name,
                 char *file_name, uint32_t *records, bool print_data, uint8_t verbose);

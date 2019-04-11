@@ -9,7 +9,7 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/xseed-validator_config.h.in
 INCLUDE_DIRECTORIES("${CMAKE_CURRENT_BINARY_DIR}")
 
 add_sources(xseed-validator xseed-validator_main.c parse_warn_options.c check_file.c
-        check_header.c check_extra_headers.c check_payloads.c
+        check_header.c check_extra_headers.c
         check_identifier.c)
 
 ADD_EXECUTABLE(xseed-validator ${xseed-validator_SRCS})
