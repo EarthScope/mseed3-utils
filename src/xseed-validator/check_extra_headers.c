@@ -13,7 +13,8 @@
 #define SCHEMA_BUFFER_SIZE 1024u
 
 static void schema_error_func (void *client, const char *format, ...);
-
+static WJElement load_schema_func (const char *name, void *client, const char *file, const int line);
+static void schema_free (WJElement schema, void *client);
 
 /*! @brief Check extra header using WJElement against a user provided schema
  *
@@ -33,7 +34,7 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
   WJElement document_element;
   char *extraHeaderStr;
   bool valid_extra_header = true;
-  is_valid_gbl = valid_extra_header;
+  is_valid_gbl            = valid_extra_header;
 
   char schema_buffer[SCHEMA_BUFFER_SIZE];
   char *buffer = (char *)calloc (extra_header_len + 1, sizeof (char));
@@ -98,10 +99,15 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
     WJReader schema_reader   = WJROpenFILEDocument (schema_file, schema_buffer, SCHEMA_BUFFER_SIZE);
     WJElement schema_element = WJEOpenDocument (schema_reader, NULL, NULL, NULL);
 
-    WJEErrCB errFunc = &schema_error_func;
+    char *path    = xseed_get_dirname (schema);
+    char *pattern = xseed_cat_strings (path, "/%s");
+
+    WJEErrCB errFunc            = &schema_error_func;
+    WJESchemaLoadCB load_schema = &load_schema_func;
+    WJESchemaFreeCB free_schema = &schema_free;
 
     /* Validate extra headers against schema */
-    XplBool isValid = WJESchemaValidate (schema_element, document_element, errFunc, NULL, NULL, NULL);
+    XplBool isValid = WJESchemaValidate (schema_element, document_element, errFunc, load_schema, free_schema, pattern);
 
     if ((!isValid) || (!is_valid_gbl))
     {
@@ -111,6 +117,11 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
       if (options->treat_as_errors)
       {
         free (buffer);
+        WJECloseDocument (schema_element);
+        WJRCloseDocument (schema_reader);
+        fclose (schema_file);
+        free (pattern);
+        free (path);
         return valid_extra_header;
       }
     }
@@ -124,6 +135,8 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
     WJECloseDocument (schema_element);
     WJRCloseDocument (schema_reader);
     fclose (schema_file);
+    free (pattern);
+    free (path);
 
   } // if no schema file provided
   else
@@ -156,4 +169,52 @@ schema_error_func (void *client, const char *format, ...)
   va_end (ap);
   fprintf (stderr, "\n");
   is_valid_gbl = false;
+}
+
+/* Callback for loading additional schemas */
+static WJElement
+load_schema_func (const char *name, void *client,
+                  const char *file, const int line)
+{
+  char *format;
+  char *path;
+  FILE *schemafile;
+  WJReader readschema;
+  WJElement schema;
+  schema = NULL;
+  if (client && name)
+  {
+
+    format = (char *)client;
+    path   = malloc (strlen (format) + strlen (name));
+    sprintf (path, format, name);
+
+    if ((schemafile = fopen (path, "r")))
+    {
+      if ((readschema = WJROpenFILEDocument (schemafile, NULL, 0)))
+      {
+        schema = WJEOpenDocument (readschema, NULL, NULL, NULL);
+      }
+      else
+      {
+        fprintf (stderr, "json document failed to open: '%s'\n", path);
+      }
+      fclose (schemafile);
+    }
+    else
+    {
+      fprintf (stderr, "json file not found: '%s'\n", path);
+    }
+    free (path);
+  }
+  //WJEDump(schema);
+  return schema;
+}
+
+/* Callback to free additional schemas */
+static void
+schema_free (WJElement schema, void *client)
+{
+  WJECloseDocument (schema);
+  return;
 }

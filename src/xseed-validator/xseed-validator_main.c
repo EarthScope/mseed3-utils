@@ -199,17 +199,20 @@ main (int argc, char **argv)
     printf ("xseed-validator FAILED to validate %d file(s) out of the %d file(s) processed\n", fail_cnt, file_cnt);
 
     printf ("Offending file(s):\n");
+
     for (int i = 0; i < fail_cnt; i++)
     {
       printf ("%s\n", files[i]);
+    }
+    printf ("\n");
+
+  }
+   
+    for (int i = 0; i < file_cnt; i++)
+    {
       free (files[i]);
     }
     free (files);
 
-    printf ("\n");
-
-    return EXIT_FAILURE;
-  }
-
-  return EXIT_SUCCESS;
+  return fail_cnt ? EXIT_FAILURE : EXIT_SUCCESS;
 }
