@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include "constants.h"
+
 
 long
 xseed_file_length (FILE *file)
@@ -12,14 +14,14 @@ xseed_file_length (FILE *file)
 
   if (0 > fseek (file, 0L, SEEK_END))
   {
-    return -1; //TODO should be an error from constants
+    return XSEED_SEEK_ERROR;
   }
 
   long file_size = ftell (file);
 
   if (0 > fseek (file, current_pos, SEEK_SET))
   {
-    return -1; //TODO should be an error from constants
+    return XSEED_SEEK_ERROR;
   }
 
   return file_size;
