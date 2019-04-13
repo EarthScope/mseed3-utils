@@ -166,7 +166,6 @@ check_file (struct extra_options_s *options, FILE *input, char *schema_file_name
             if (verbose > 1)
               printf ("Record: %d --- Data Payload is valid!\n", recordNum);
 
-
             if (print_data)
             {
               int line, col, cnt, samplesize;

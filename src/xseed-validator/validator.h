@@ -27,11 +27,7 @@ check_payloads(struct extra_options_s *options, FILE *input, uint32_t payload_le
                uint8_t payload_fmt, char *file_name,
                uint32_t recordNum, bool print_data, uint8_t verbose);
 
-<<<<<<< HEAD
 bool check_payload_text(struct extra_options_s *options, uint32_t payload_len, char *buffer);
-=======
-bool check_payload_text(struct warn_options_s *options, uint32_t payload_len, char *buffer);
->>>>>>> master
 
 bool is_valid_gbl;
 #endif /* __XSEEDVALIDATOR_VALIDATOR_H__ */
