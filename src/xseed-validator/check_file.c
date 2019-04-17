@@ -158,7 +158,7 @@ check_file (struct extra_options_s *options, FILE *input, char *schema_file_name
         else
         {
           int samples = msr3_unpack_data (msr, verbose);
-          
+
           valid_payload = (samples <= 0) ? false : true;
 
           if (valid_payload)
