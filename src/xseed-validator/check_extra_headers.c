@@ -27,7 +27,7 @@ static void schema_error_func (void *client, const char *format, ...);
  */
 /*TODO future improvement pass back stuff from extra_headers to validate payloads*/
 bool
-check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
+check_extra_headers (struct extra_options_s *options, char *schema, FILE *input,
                      uint16_t extra_header_len, uint32_t recordNum, uint8_t verbose)
 {
   WJElement document_element;
@@ -52,10 +52,8 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
     free (buffer);
     valid_extra_header = false;
 
-    //if(options->treat_as_errors)
-    // {
     return valid_extra_header;
-    //}
+
   }
 
   if (extra_header_len == 0)

@@ -3,14 +3,15 @@
 
 #include <stdbool.h>
 
-struct warn_options_s
+/* Additional cmd line options:
+ * treat_as_errors -> treats validation warnings as errors and halts program,
+ * skip-payload -> skips payload validation */
+struct extra_options_s
 {
     bool treat_as_errors;
-    bool ignore_header;
-    bool warn_extra_headers;
     bool skip_payload;
 };
 
-bool parse_warn_options(struct warn_options_s *warn_options, char *string_parse);
+bool parse_extra_options(struct extra_options_s *extra_options, char *string_parse);
 
 #endif /*__XSEEDVALIDATOR_WARNINGS_H__ */

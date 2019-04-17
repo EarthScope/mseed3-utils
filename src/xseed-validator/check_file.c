@@ -18,7 +18,7 @@
  *
  */
 bool
-check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
+check_file (struct extra_options_s *options, FILE *input, char *schema_file_name,
             char *file_name, uint32_t *records, bool print_data, uint8_t verbose)
 {
   bool valid_header       = false;
@@ -39,16 +39,17 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
     printf("Reading file %s\n", file_name);
   }
 
-  if (verbose > 1)
-  {
-    printf ("Record length of %d found, starting verification...\n", file_len);
-  }
-
   if (file_len < 0)
   {
     printf ("Error! file %s could not read!\n", file_name);
     return false;
   }
+
+  if (verbose > 1)
+  {
+    printf ("Record length of %d found, starting verification...\n", file_len);
+  }
+
 
   /* Loop through all records in the provided file and validate content */
   for (file_pos = lmp_ftell64 (input); file_len > file_pos; file_pos = lmp_ftell64 (input))
@@ -164,6 +165,72 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
           {
             if (verbose > 1)
               printf ("Record: %d --- Data Payload is valid!\n", recordNum);
+
+            if (print_data)
+            {
+              int line, col, cnt, samplesize;
+              uint64_t lines = (msr->numsamples / 6) + 1;
+              void *sptr;
+
+              if ((samplesize = ms_samplesize(msr->sampletype)) == 0)
+              {
+                printf("Error! Record: %d --- Unrecognized sample type: '%c'\n", recordNum, msr->sampletype);
+                if (options->treat_as_errors)
+                {
+                  return false;
+                }
+                fail_count_rcd += 1;
+                continue;
+              }
+              if (msr->sampletype == 'a')
+              {
+                char *ascii = (char *) msr->datasamples;
+                uint64_t length = msr->numsamples;
+
+                printf("Record: %d --- ASCII Data:\n", recordNum);
+
+                /* Print maximum log message segments */
+                while (length > (MAX_LOG_MSG_LENGTH - 1))
+                {
+                  printf("%.*s", (MAX_LOG_MSG_LENGTH - 1), ascii);
+                  ascii += MAX_LOG_MSG_LENGTH - 1;
+                  length -= MAX_LOG_MSG_LENGTH - 1;
+                }
+
+                /* Print any remaining ASCII and add a newline */
+                if (length > 0)
+                {
+                  printf("%.*s\n", (int) length, ascii);
+                } else
+                {
+                  printf("\n");
+                }
+              } else
+              {
+                for (cnt = 0, line = 0; line < lines; line++)
+                {
+                  for (col = 0; col < 6; col++)
+                  {
+                    if (cnt < msr->numsamples)
+                    {
+                      sptr = (char *) msr->datasamples + (cnt * samplesize);
+
+                      if (msr->sampletype == 'i')
+                        printf("%10d  ", *(int32_t *) sptr);
+
+                      else if (msr->sampletype == 'f')
+                        printf("%10.8g  ", *(float *) sptr);
+
+                      else if (msr->sampletype == 'd')
+                        printf("%10.10g  ", *(double *) sptr);
+
+                      cnt++;
+                    }
+                  }
+                  printf("\n");
+                }
+              }
+            }
           }
           else
           {
@@ -207,7 +274,6 @@ check_file (struct warn_options_s *options, FILE *input, char *schema_file_name,
   if (verbose > 1)
   {
     printf("Completed processing %d record(s)\n", recordNum);
-    //TODO needs to be conditional (valid_file)
   }
 
   *records = recordNum;

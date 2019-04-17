@@ -11,7 +11,7 @@ display_help (char *program_name, char *usage, char *message, const struct xseed
   printf ("\n         ## Options ##\n");
 
   const struct xseed_option_s *opt_ptr = opts;
-  //int max_option_len = 15;
+
   for (; opt_ptr != NULL && (0 != opt_ptr->short_option || 0 != opt_ptr->long_option || 0 != opt_ptr->description ||
                              0 != opt_ptr->variable_to_fill || 0 != opt_ptr->argument_type);
        opt_ptr++)

@@ -28,7 +28,7 @@ static const struct xseed_option_s args[] = {
     {'j', "schema", "   File containing JSON Schema", NULL, MANDATORY_OPTARG},
     {'v', "verbose", "Verbosity level", NULL, OPTIONAL_OPTARG},
     {'d', "data", "   Print data payload", NULL, OPTIONAL_OPTARG},
-    {'W', "       ", "Option flag  *e.g* -W error,skip-payload ", NULL, MANDATORY_OPTARG},
+    {'W', "       ", "Extra Option  *e.g* -W error,skip-payload ", NULL, MANDATORY_OPTARG},
     {'V', "version", "Print program version", NULL, OPTIONAL_OPTARG},
     {0, 0, 0, 0, 0}};
 
@@ -48,7 +48,7 @@ main (int argc, char **argv)
   char *short_opt_string        = NULL;
   struct option *long_opt_array = NULL;
   int opt;
-  struct warn_options_s warn_options[1];
+  struct extra_options_s extra_options[1];
   unsigned char display_usage    = 0;
   unsigned char display_revision = 0;
 
@@ -60,14 +60,14 @@ main (int argc, char **argv)
 
   char **files = malloc (argc * sizeof (char *));
 
-  /* For warning options - TODO Need payload skipping option */
-  memset (warn_options, 0, sizeof (struct warn_options_s));
+  /* For warning options */
+  memset (extra_options, 0, sizeof (struct extra_options_s));
 
   /* parse command line args */
   xseed_get_short_getopt_string (&short_opt_string, args);
   xseed_get_long_getopt_array (&long_opt_array, args);
 
-  /* Get usage options TODO in progress */
+  /* Get usage options */
   int longindex;
   while (-1 != (opt = getopt_long (argc, argv, short_opt_string, long_opt_array, &longindex)))
   {
@@ -87,7 +87,7 @@ main (int argc, char **argv)
       }
       break;
     case 'W':
-      parse_warn_options (warn_options, optarg);
+      parse_extra_options (extra_options, optarg);
       break;
     case 'h':
       display_usage = 1;
@@ -150,7 +150,7 @@ main (int argc, char **argv)
       continue;
     }
 
-    // Open ms file as binary
+    /* Open ms file as binary*/
     file = fopen (file_name, "rb");
 
     if (file == NULL)
@@ -159,9 +159,8 @@ main (int argc, char **argv)
       continue;
     }
 
-    // run verification tests
-    // TODO keep tally of failures
-    valid = check_file (warn_options, file, schema_file_name, file_name, &record_cnt, print_data, verbose);
+    /* run verification tests */
+    valid = check_file (extra_options, file, schema_file_name, file_name, &record_cnt, print_data, verbose);
     fclose (file);
     record_total = record_total + (uint64_t)record_cnt;
     file_cnt++;
@@ -186,7 +185,7 @@ main (int argc, char **argv)
     free (schema_file_name);
   }
 
-  //Final program output
+  /* Final program output */
   if (verbose > 0)
   {
     printf ("\n----------------------------------------------------------\n");
