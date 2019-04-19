@@ -17,6 +17,7 @@ static WJElement load_schema_func (const char *name, void *client, const char *f
 static void schema_free (WJElement schema, void *client);
 
 
+
 /*! @brief Check extra header using WJElement against a user provided schema
  *
  *  @param[in] options -W cmd line warn options (currently not implemented)
