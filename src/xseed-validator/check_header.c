@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <xseed-common/array.h>
-#include <xseed-common/constants.h>
 
 #include <libmseed.h>
+#include <xseed-common/constants.h>
 
 #include "validator.h"
 #include "warnings.h"
@@ -44,7 +44,7 @@ Field  Field name                            Type       Length    Offset  Conten
 All length values are specified in bytes, which are assumed to be 8-bits in length
 ​*/
 
-static bool parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_len,
+static bool parse_header (struct extra_options_s *options, char *buffer, uint8_t *identifier_len,
                           uint16_t *extra_header_len, uint32_t *payload_len, uint8_t *payload_fmt,
                           uint32_t recordNum, uint8_t verbose);
 
@@ -62,11 +62,10 @@ static bool parse_header (struct warn_options_s *options, char *buffer, uint8_t 
  *  @param[in] verbose verbosity level
  *
  *
- *  @todo test big endian case, having two fns was clunky, converted to not using non-conventional bit shifting
  */
 
 bool
-check_header (struct warn_options_s *options, FILE *input_file, long file_len, int64_t *file_pos,
+check_header (struct extra_options_s *options, FILE *input_file, long file_len, int64_t *file_pos,
               uint8_t *identifier_len, uint16_t *extra_header_len, uint32_t *payload_len,
               uint8_t *payload_fmt, uint32_t recordNum, int8_t verbose)
 {
@@ -112,7 +111,7 @@ check_header (struct warn_options_s *options, FILE *input_file, long file_len, i
  */
 
 bool
-parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_len,
+parse_header (struct extra_options_s *options, char *buffer, uint8_t *identifier_len,
               uint16_t *extra_header_len, uint32_t *payload_len, uint8_t *payload_fmt,
               uint32_t recordNum, uint8_t verbose)
 {
@@ -148,7 +147,6 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
   }
 
   //---Check valid year---
-  //uint16_t year = (uint8_t )buffer[8] | (uint8_t)buffer[9] << 8;
   uint16_t year = (uint8_t)buffer[8] + ((uint8_t)buffer[9] * (0xFF + 1));
   if (verbose > 2)
     printf ("Record: %d --- Checking Year value: %d\n", recordNum, year);
@@ -164,9 +162,7 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
   }
 
   //TODO Warn for data in future
-
   //---Check valid Day-of-Year---
-  //uint16_t doy = (uint8_t )buffer[10] | (uint8_t)buffer[11] << 8;
   uint16_t doy = (uint8_t)buffer[10] + ((uint8_t)buffer[11] * (0xFF + 1));
   if (verbose > 2)
     printf ("Record: %d --- Checking Day of Year value: %d\n", recordNum, doy);
@@ -233,13 +229,13 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
     ((uint8_t)buffer[5] * (0xFF + 1)) +
     ((uint8_t)buffer[6] * (0xFFFF + 1)) +
     ((uint8_t)buffer[7] * (0xFFFFFF + 1));
-  //uint32_t nanoseconds = ((uint8_t)buffer[4] | ((uint8_t)buffer[5] << 8) | ((uint8_t)buffer[6] << 16) | ((uint8_t)buffer[7] << 24));
+
   if (verbose > 2)
     printf ("Record: %d --- Checking Nanoseconds value: %d\n", recordNum, nanoseconds);
 
   if (999999999 < nanoseconds)
   {
-    printf ("\"Error! Record: %d --- nanoseconds out of range\n", recordNum);
+    printf ("Error! Record: %d --- nanoseconds out of range\n", recordNum);
     header_valid = false;
     if (options->treat_as_errors)
     {
@@ -258,55 +254,55 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
 
   switch (payload)
   {
-  case 0:
+  case XSEED_TEXT:
     if (verbose > 2)
       printf ("Payload flag indicates ASCII/TEXT\n");
     break;
-  case 1: /* 16-bit, integer, little-endian */
+  case XSEED_UINT16: /* 16-bit, integer, little-endian */
     if (verbose > 2)
       printf ("Payload flag indicates 16-bit, integer, little-endian\n");
     break;
-  case 3: /* 32-bit, integer, little-endian */
+  case XSEED_UINT32: /* 32-bit, integer, little-endian */
     if (verbose > 2)
       printf ("Payload flag indicates 32-bit, integer, little-endian\n");
     break;
-  case 4: /* IEEE 32-bit floats, little-endian */
+  case XSEED_FLOAT: /* IEEE 32-bit floats, little-endian */
     if (verbose > 2)
       printf ("Payload flag indicates IEEE 32-bit floats, little-endian\n");
     break;
-  case 5: /* IEEE 64-bit floats (double), little-endian */
+  case XSEED_DOUBLE: /* IEEE 64-bit floats (double), little-endian */
     if (verbose > 2)
       printf ("Payload flag indicates IEEE 64-bit floats (double), little-endian\n");
     break;
-  case 10: /* Steim-1 integer compression, big-endian */
+  case XSEED_STEIM1: /* Steim-1 integer compression, big-endian */
     if (verbose > 2)
       printf ("Payload flag indicates Steim-1 integer compression, big-endian\n");
     break;
-  case 11: /* Steim-2 integer compression, big-endian */
+  case XSEED_STEIM2: /* Steim-2 integer compression, big-endian */
     if (verbose > 2)
       printf ("Payload flag indicates Steim-2 integer compression, big-endian\n");
     break;
-  case 19: /* Steim-3 integer compressin, big-endian */
+  case XSEED_STEIM3: /* Steim-3 integer compressin, big-endian */
     if (verbose > 2)
       printf ("Payload flag indicates Steim-3 integer compression, big-endian\n");
     break;
-  case 50: /* 16-bit integers, general compressor */
+  case XSEED_COMPRESS_INT16: /* 16-bit integers, general compressor */
     if (verbose > 2)
       printf ("Payload flag indicates 16-bit integers, general compressor\n");
     break;
-  case 51: /* 32-bit integer, general compressor */
+  case XSEED_COMPRESS_INT32: /* 32-bit integer, general compressor */
     if (verbose > 2)
       printf ("Payload flag indicates 32-bit integer, general compressor\n");
     break;
-  case 52: /* 32-bit IEEE floats, general compressor */
+  case XSEED_COMPRESS_FLOAT: /* 32-bit IEEE floats, general compressor */
     if (verbose > 2)
       printf ("32-bit IEEE floats, general compressor\n");
     break;
-  case 53: /* 64-bit IEEE floats, general compressor */
+  case XSEED_COMPRESS_DOUBLE: /* 64-bit IEEE floats, general compressor */
     if (verbose > 2)
       printf ("64-bit IEEE floats, general compressor\n");
     break;
-  case 100: /* Opaque data */
+  case XSEED_OPAQUE: /* Opaque data */
     if (verbose > 2)
       printf ("Opaque data\n");
     break;
@@ -322,8 +318,6 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
 
   //Get Sample Rate
   double sample_rate;
-  //TODO convenience function for parsing buffer, in progress
-  //buffer_to_number(buffer+16, sizeof(double), XSEED_DOUBLE, &sample_rate);
   //TODO need check for valid sample rate
   sample_rate = *((double *)((uint8_t *)buffer + 16));
   if (sample_rate < 0)
@@ -339,7 +333,6 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
   uint32_t number_samples =
       (uint8_t)buffer[24] + ((uint8_t)buffer[25] * (0xFF + 1)) + ((uint8_t)buffer[26] * (0xFFFF + 1)) +
       ((uint8_t)buffer[27] * (0xFFFFFF + 1));
-  //uint32_t number_samples = ((uint8_t)buffer[24] | ((uint8_t)buffer[25] << 8) | ((uint8_t)buffer[26] << 16) | ((uint8_t)buffer[27] << 24));
 
   if (verbose > 2)
     printf ("Record: %d --- Checking number of samples value: %d\n", recordNum, number_samples);
@@ -347,7 +340,6 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
   //Get CRC Value
   uint32_t CRC = (uint8_t)buffer[28] + ((uint8_t)buffer[29] * (0xFF + 1)) + ((uint8_t)buffer[30] * (0xFFFF + 1)) +
                  ((uint8_t)buffer[31] * (0xFFFFFF + 1));
-  //uint32_t CRC = ((uint8_t)buffer[28]) | ((uint8_t)buffer[29] << 8) | ((uint8_t)buffer[30] << 16) | ((uint8_t)buffer[31]) << 24 ;
 
   if (verbose > 2)
     printf ("Record: %d --- CRC value: 0x%0X\n", recordNum, CRC);
@@ -364,10 +356,10 @@ parse_header (struct warn_options_s *options, char *buffer, uint8_t *identifier_
 
   //Get lengths for extra header and payload
   uint16_t extra_header_l = (uint8_t)buffer[34] + ((uint8_t)buffer[35] * (0xFF + 1));
-  //uint16_t extra_header_l = (uint8_t )buffer[34] | (uint8_t)buffer[35] << 8;
+
   if (verbose > 2)
     printf ("Record: %d --- Extra Header Length value: %d\n", recordNum, extra_header_l);
-  //uint32_t payload_l = ((uint8_t)buffer[36] | ((uint8_t)buffer[37] << 8) | ((uint8_t)buffer[38] << 16) | ((uint8_t)buffer[39] << 24));
+
   uint32_t payload_l =
       (uint8_t)buffer[36] + ((uint8_t)buffer[37] * (0xFF + 1)) + ((uint8_t)buffer[38] * (0xFFFF + 1)) +
       ((uint8_t)buffer[39] * (0xFFFFFF + 1));

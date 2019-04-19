@@ -5,8 +5,17 @@
 #include <xseed-common/array.h>
 #include <xseed-common/xseed_string.h>
 
+/*! @brief parsing additional validator options
+ *
+ *  @param[out] extra_options_s struct to contain additional options
+ *  @param[in] string_parse string containg extra option from cmd line
+ *
+ */
+
+ 
+ 
 bool
-parse_warn_options (struct warn_options_s *warn_options, char *string_parse)
+parse_extra_options (struct extra_options_s *extra_options, char *string_parse)
 {
   char **tokened       = NULL;
   size_t tokened_len   = 0;
@@ -24,28 +33,15 @@ parse_warn_options (struct warn_options_s *warn_options, char *string_parse)
   }
   for (size_t i = 0; i < tokened_len && !bad_option; i++)
   {
-    // xseedvalidator --file myfile.mseeid -W error
-    //split on equals
     char *flag = strtok (tokened[i], "=");
-    //char *value = strtok(NULL,"=");
 
-    //trim front and back whitespaces
-    //set values
     if (0 == strncmp ("error", flag, strlen ("error")))
     {
-      warn_options->treat_as_errors = true;
-    }
-    else if (0 == strncmp ("skip-header", flag, strlen ("skip-header")))
-    {
-      warn_options->ignore_header = true;
-    }
-    else if (0 == strncmp ("skip-extra-header", flag, strlen ("skip-extra-header")))
-    {
-      warn_options->warn_extra_headers = true;
+      extra_options->treat_as_errors = true;
     }
     else if (0 == strncmp ("skip-payload", flag, strlen ("skip-payload")))
     {
-      warn_options->skip_payload = true;
+      extra_options->skip_payload = true;
     }
     else
     {
