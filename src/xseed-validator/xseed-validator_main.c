@@ -30,7 +30,7 @@ static const struct xseed_option_s args[] = {
     {'d', "data", "   Print data payload", NULL, OPTIONAL_OPTARG},
     {'W', "       ", "Extra Options\n"
                       "                       "
-                      "Usage: -W {option} ... \n"
+                      "Usage: -W {option},{option},...\n"
                       "                       "
                       "Options:\n "
                       "                         "
