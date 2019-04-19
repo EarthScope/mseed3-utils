@@ -12,7 +12,7 @@
  *
  */
 bool
-check_identifier (struct warn_options_s *options, FILE *input, uint8_t identifier_len,
+check_identifier (struct extra_options_s *options, FILE *input, uint8_t identifier_len,
                   uint32_t recordNum, uint8_t verbose)
 {
   bool output  = true;

@@ -16,6 +16,7 @@ static void schema_error_func (void *client, const char *format, ...);
 static WJElement load_schema_func (const char *name, void *client, const char *file, const int line);
 static void schema_free (WJElement schema, void *client);
 
+
 /*! @brief Check extra header using WJElement against a user provided schema
  *
  *  @param[in] options -W cmd line warn options (currently not implemented)
@@ -28,7 +29,7 @@ static void schema_free (WJElement schema, void *client);
  */
 /*TODO future improvement pass back stuff from extra_headers to validate payloads*/
 bool
-check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
+check_extra_headers (struct extra_options_s *options, char *schema, FILE *input,
                      uint16_t extra_header_len, uint32_t recordNum, uint8_t verbose)
 {
   WJElement document_element;
@@ -53,10 +54,8 @@ check_extra_headers (struct warn_options_s *options, char *schema, FILE *input,
     free (buffer);
     valid_extra_header = false;
 
-    //if(options->treat_as_errors)
-    // {
     return valid_extra_header;
-    //}
+
   }
 
   if (extra_header_len == 0)
