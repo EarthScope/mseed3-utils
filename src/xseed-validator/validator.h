@@ -9,6 +9,7 @@
 
 #define XSEED_FIXED_HEADER_LEN 40
 
+
 bool check_file(struct extra_options_s *options, FILE *input, char *schema_file_name,
                 char *file_name, uint32_t *records, bool print_data, uint8_t verbose);
 
@@ -28,6 +29,7 @@ check_payloads(struct extra_options_s *options, FILE *input, uint32_t payload_le
                uint32_t recordNum, bool print_data, uint8_t verbose);
 
 bool check_payload_text(struct extra_options_s *options, uint32_t payload_len, char *buffer);
+
 
 bool is_valid_gbl;
 #endif /* __XSEEDVALIDATOR_VALIDATOR_H__ */
