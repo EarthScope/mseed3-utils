@@ -210,16 +210,11 @@ main (int argc, char **argv)
     for (int i = 0; i < fail_cnt; i++)
     {
       printf ("%s\n", files[i]);
+      free (files[i]);
     }
     printf ("\n");
 
   }
-   
-    for (int i = 0; i < file_cnt; i++)
-    {
-      free (files[i]);
-    }
-    free (files);
 
   return fail_cnt ? EXIT_FAILURE : EXIT_SUCCESS;
 }
