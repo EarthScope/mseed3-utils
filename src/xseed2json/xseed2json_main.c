@@ -176,25 +176,34 @@ print_xseed_2_json (char *file_name, bool print_data, uint8_t verbose)
       return EXIT_FAILURE;
     }
 
+    /* Create Flags object */
+    ierr = json_object_set_value (jsonObj, "Flags", json_value_init_object ());
+
+    if (ierr == JSONFailure)
+    {
+      fprintf (stderr, "Something went wrong generating JSON : Flags (Object)\n");
+      return EXIT_FAILURE;
+    }
+
+    flagsObj = json_object_get_object (jsonObj, "Flags");
+
+    if (flagsObj == NULL)
+    {
+      fprintf (stderr, "Something went wrong getting JSON : Flags (Object)\n");
+      return EXIT_FAILURE;
+    }
+
+    ierr = json_object_set_number (flagsObj, "RawUInt8", msr->flags);
+
+    if (ierr == JSONFailure)
+    {
+      fprintf (stderr, "Something went wrong generating JSON : Flags RawUint8\n");
+      return EXIT_FAILURE;
+    }
+
     /* Add boolean entries for each bit flag set */
     if (msr->flags)
     {
-      ierr = json_object_set_value (jsonObj, "Flags", json_value_init_object ());
-
-      if (ierr == JSONFailure)
-      {
-        fprintf (stderr, "Something went wrong generating JSON : Flags (Object)\n");
-        return EXIT_FAILURE;
-      }
-
-      flagsObj = json_object_get_object (jsonObj, "Flags");
-
-      if (flagsObj == NULL)
-      {
-        fprintf (stderr, "Something went wrong getting JSON : Flags (Object)\n");
-        return EXIT_FAILURE;
-      }
-
       if (ierr != JSONFailure && bit (msr->flags, 0x01))
         ierr = json_object_set_boolean (flagsObj, "CalibrationSignalsPresent", 1);
       if (ierr != JSONFailure && bit (msr->flags, 0x02))
