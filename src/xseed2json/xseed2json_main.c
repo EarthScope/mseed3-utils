@@ -176,7 +176,7 @@ print_xseed_2_json (char *file_name, bool print_data, uint8_t verbose)
       return EXIT_FAILURE;
     }
 
-    /* Add boolean entries for each big flag set */
+    /* Add boolean entries for each bit flag set */
     if (msr->flags)
     {
       ierr = json_object_set_value (jsonObj, "Flags", json_value_init_object ());
@@ -189,7 +189,7 @@ print_xseed_2_json (char *file_name, bool print_data, uint8_t verbose)
 
       flagsObj = json_object_get_object (jsonObj, "Flags");
 
-      if (ierr == JSONFailure)
+      if (flagsObj == NULL)
       {
         fprintf (stderr, "Something went wrong getting JSON : Flags (Object)\n");
         return EXIT_FAILURE;
