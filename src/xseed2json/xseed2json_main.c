@@ -228,7 +228,7 @@ print_xseed_2_json (char *file_name, bool print_data, uint8_t verbose)
       }
     }
 
-    ms_nstime2timestrz (msr->starttime, string, SEEDORDINAL, NANO_MICRO_NONE);
+    ms_nstime2timestrz (msr->starttime, string, ISOMONTHDAY, NANO);
     ierr = json_object_set_string (jsonObj, "StartTime", string);
 
     if (ierr == JSONFailure)
