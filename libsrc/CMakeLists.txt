@@ -52,7 +52,7 @@ IF(MSEED_BUILD)
     SET(MSEED_INCLUDE_DIRS ${source_dir}/ PARENT_SCOPE)
 
 ELSEIF (NOT MSEED_CORRECT_VERSION_FOUND)
-    MESSAGE(FATAL_ERROR "xSEED-utils requires libmseed >= 3.0.0")
+    MESSAGE(FATAL_ERROR "mseed3-utils requires libmseed >= 3.0.0")
 ENDIF(MSEED_BUILD)
 
 IF (WJELEMENT_FOUND)
@@ -120,5 +120,5 @@ IF (WJELEMENT_BUILD)
 
 
 ELSEIF(NOT WJELEMENT_FOUND)
-    MESSAGE(FATAL_ERROR "xseed-utils requires wsjelement")
+    MESSAGE(FATAL_ERROR "mseed3-utils requires wsjelement")
 ENDIF(WJELEMENT_BUILD)
