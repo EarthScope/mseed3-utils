@@ -4,7 +4,7 @@
 #include <libmseed.h>
 #include <parson.h>
 
-#include "mseed2json_config.h"
+#include "mseed3-json_config.h"
 #include <mseed3-common/cmd_opt.h>
 #include <mseed3-common/files.h>
 #include <mseed3-common/mseed3_string.h>
@@ -93,9 +93,9 @@ main (int argc, char **argv)
   {
 
     display_version (argv[0], "Program to print a miniSEED file in JSON format",
-                     MSEED2JSON_VERSION_MAJOR,
-                     MSEED2JSON_VERSION_MINOR,
-                     MSEED2JSON_VERSION_PATCH);
+                     MSEED3JSON_VERSION_MAJOR,
+                     MSEED3JSON_VERSION_MINOR,
+                     MSEED3JSON_VERSION_PATCH);
     return EXIT_SUCCESS;
   }
 

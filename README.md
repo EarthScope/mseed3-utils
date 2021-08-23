@@ -2,9 +2,9 @@
 **This repository contains command line utilities to verify miniSEED 3 files**
 - miniSEED 3 Validator
   - Validates a single or collection of miniSEED 3 files
-- mseed2text
+- mseed3-text
   - Prints the contents of a selected miniSEED 3 file in text format to the terminal
-- mseed2json
+- mseed3-json
   - Prints the contents of a selected miniSEED 3 file in JSON format to the terminal
 
 ### Dependencies
