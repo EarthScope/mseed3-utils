@@ -61,7 +61,7 @@ Usage: ./mseed3-validator [options] infile(s)
 ```
 
 
-## mseed2text
+## mseed3-text
 Prints the contents of a selected miniSEED file in text format to the terminal
 
 **Usage:**
@@ -69,7 +69,7 @@ Prints the contents of a selected miniSEED file in text format to the terminal
 ```
 Program to print an miniSEED file in human readable format:
 
-Usage: ./mseed2text [options] infile(s)
+Usage: ./mseed3-text [options] infile(s)
 
          ## Options ##
      -h help    Display usage information
@@ -78,7 +78,7 @@ Usage: ./mseed2text [options] infile(s)
      -V version Print program version
 ```
 
-## mseed2json
+## mseed3-json
 Prints the contents of a selected miniSEED file in JSON format to the terminal
 
 **Usage:**
@@ -86,7 +86,7 @@ Prints the contents of a selected miniSEED file in JSON format to the terminal
 ```
 Program to print an miniSEED file in JSON format:
 
-Usage: ./mseed2json [options] infile(s)
+Usage: ./mseed3-json [options] infile(s)
 
          ## Options ##
      -h help    Display usage information
