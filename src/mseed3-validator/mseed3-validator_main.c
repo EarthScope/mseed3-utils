@@ -27,7 +27,6 @@ static const struct mseed3_option_s args[] = {
     {'h', "help", "   Display usage information", NULL, NO_OPTARG},
     {'j', "schema", "File containing JSON Schema", NULL, MANDATORY_OPTARG},
     {'v', "verbose", "Verbosity level", NULL, OPTIONAL_OPTARG},
-    {'d', "data", "   Print data payload", NULL, OPTIONAL_OPTARG},
     {'W', "       ", "Extra Options\n"
                       "                       "
                       "Usage: -W {option},{option},...\n"
@@ -47,7 +46,6 @@ int
 main (int argc, char **argv)
 {
   uint8_t verbose        = 0;
-  bool print_data        = false;
   char *file_name        = NULL;
   char *schema_file_name = NULL;
   int32_t fail_cnt       = 0;
@@ -81,9 +79,6 @@ main (int argc, char **argv)
   {
     switch (opt)
     {
-    case 'd':
-      print_data = true;
-      break;
     case 'v':
       if (0 == optarg)
       {
@@ -158,7 +153,7 @@ main (int argc, char **argv)
       continue;
     }
 
-    /* Open ms file as binary*/
+    /* Open ms file as binary */
     file = fopen (file_name, "rb");
 
     if (file == NULL)
@@ -168,7 +163,7 @@ main (int argc, char **argv)
     }
 
     /* run verification tests */
-    valid = check_file (extra_options, file, schema_file_name, file_name, &record_cnt, print_data, verbose);
+    valid = check_file (extra_options, file, schema_file_name, file_name, &record_cnt, verbose);
     fclose (file);
     record_total = record_total + (uint64_t)record_cnt;
     file_cnt++;

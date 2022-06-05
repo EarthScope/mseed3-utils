@@ -10,7 +10,7 @@
 #define MSEED3_FIXED_HEADER_LEN 40
 
 bool check_file(struct extra_options_s *options, FILE *input, char *schema_file_name,
-                char *file_name, uint32_t *records, bool print_data, uint8_t verbose);
+                char *file_name, uint32_t *records, uint8_t verbose);
 
 bool check_header(struct extra_options_s *options, FILE *input_file, long file_len, int64_t *file_pos,
                   uint8_t *identifier_len, uint16_t *extra_header_len, uint32_t *payload_len,
