@@ -31,6 +31,7 @@ check_file (struct extra_options_s *options, FILE *input, char *schema_file_name
   int64_t file_pos         = 0;
   int file_len             = mseed3_file_length (input);
 
+  uint32_t flags = 0;
   MS3Record *msr = NULL;
   char recordbuffer[MAXRECLEN];
 
@@ -47,9 +48,11 @@ check_file (struct extra_options_s *options, FILE *input, char *schema_file_name
 
   if (verbose > 1)
   {
-    printf ("Record length of %d found, starting verification...\n", file_len);
+    printf ("File length of %d found, starting verification...\n", file_len);
   }
 
+  /* Set flags to check CRC and unpack data */
+  flags |= MSF_VALIDATECRC;
 
   /* Loop through all records in the provided file and validate content */
   for (file_pos = lmp_ftell64 (input); file_len > file_pos; file_pos = lmp_ftell64 (input))
@@ -147,8 +150,8 @@ check_file (struct extra_options_s *options, FILE *input, char *schema_file_name
           fail_count_rcd += 1;
         }
 
-        /* Parse record with libmseed */
-        else if (msr3_parse (recordbuffer, MAXRECLEN, &msr, 0, verbose))
+        /* Parse record with libmseed, including CRC check */
+        else if (msr3_parse (recordbuffer, MAXRECLEN, &msr, flags, verbose))
         {
           printf ("Fatal Error! Record: %d --- [libmseed] Could not parse record\n", recordNum);
           fail_count_rcd += 1;
