@@ -32,7 +32,6 @@ int
 main (int argc, char **argv)
 {
   MS3Record *msr = NULL;
-  int ierr;
   uint32_t flags = 0;
 
   char *short_opt_string        = NULL;
@@ -48,10 +47,6 @@ main (int argc, char **argv)
   /* parse command line args */
   mseed3_get_short_getopt_string (&short_opt_string, args);
   mseed3_get_long_getopt_array (&long_opt_array, args);
-
-  /* Set flags to unpack data and check CRC */
-  flags |= MSF_UNPACKDATA;
-  flags |= MSF_VALIDATECRC;
 
   while (-1 != (opt = getopt_long (argc, argv, short_opt_string, long_opt_array, &longindex)))
   {
@@ -105,6 +100,11 @@ main (int argc, char **argv)
   free (long_opt_array);
   free (short_opt_string);
 
+  /* Set flags to check CRC and unpack data */
+  flags |= MSF_VALIDATECRC;
+  if (print_data)
+    flags |= MSF_UNPACKDATA;
+
   while (argc > optind)
   {
     file_name = argv[optind++];
@@ -117,90 +117,77 @@ main (int argc, char **argv)
 
     /* loop over all records in intput file,
      * Add 1 to verbose level as verbose = 1 prints nothing extra */
-    while ((ms3_readmsr (&msr, file_name, 0, NULL, 0, verbose + 1) == MS_NOERROR))
+    while ((ms3_readmsr (&msr, file_name, NULL, NULL, flags, verbose + 1) == MS_NOERROR))
     {
       msr3_print (msr, 2);
 
-      if (print_data)
+      /* Output data samples if present */
+      if (msr->numsamples > 0)
       {
-        ierr = msr3_unpack_data (msr, verbose);
+        int line, col, cnt, samplesize;
+        uint64_t lines = (msr->numsamples / 6) + 1;
+        void *sptr;
 
-        if (ierr < 0)
+        printf ("Data:\n");
+
+        if ((samplesize = ms_samplesize (msr->sampletype)) == 0)
         {
-          fprintf (stderr, "Error: Payload parsing failed: %s\n", ms_errorstr (ierr));
+          fprintf (stderr, "Unrecognized sample type: '%c'\n", msr->sampletype);
           return EXIT_FAILURE;
         }
-
-        if (verbose > 1)
-          fprintf (stderr, "Data unpacked successfully\n");
-
-        if (msr->numsamples > 0)
+        if (msr->sampletype == 'a')
         {
-          int line, col, cnt, samplesize;
-          uint64_t lines = (msr->numsamples / 6) + 1;
-          void *sptr;
+          char *ascii     = (char *)msr->datasamples;
+          uint64_t length = msr->numsamples;
 
-          printf ("Data:\n");
-
-          if ((samplesize = ms_samplesize (msr->sampletype)) == 0)
+          /* Print maximum log message segments */
+          while (length > (MAX_LOG_MSG_LENGTH - 1))
           {
-            fprintf (stderr, "Unrecognized sample type: '%c'\n", msr->sampletype);
-            return EXIT_FAILURE;
+            printf ("%.*s", (MAX_LOG_MSG_LENGTH - 1), ascii);
+            ascii += MAX_LOG_MSG_LENGTH - 1;
+            length -= MAX_LOG_MSG_LENGTH - 1;
           }
-          if (msr->sampletype == 'a')
+
+          /* Print any remaining ASCII and add a newline */
+          if (length > 0)
           {
-            char *ascii     = (char *)msr->datasamples;
-            uint64_t length = msr->numsamples;
-
-            /* Print maximum log message segments */
-            while (length > (MAX_LOG_MSG_LENGTH - 1))
-            {
-              printf ("%.*s", (MAX_LOG_MSG_LENGTH - 1), ascii);
-              ascii += MAX_LOG_MSG_LENGTH - 1;
-              length -= MAX_LOG_MSG_LENGTH - 1;
-            }
-
-            /* Print any remaining ASCII and add a newline */
-            if (length > 0)
-            {
-              printf ("%.*s\n", (int)length, ascii);
-            }
-            else
-            {
-              printf ("\n");
-            }
+            printf ("%.*s\n", (int)length, ascii);
           }
-          else /* If samples are non-ASCII, i.e. numbers */
+          else
           {
-            for (cnt = 0, line = 0; line < lines; line++)
+            printf ("\n");
+          }
+        }
+        else /* If samples are non-ASCII, i.e. numbers */
+        {
+          for (cnt = 0, line = 0; line < lines; line++)
+          {
+            for (col = 0; col < 6; col++)
             {
-              for (col = 0; col < 6; col++)
+              if (cnt < msr->numsamples)
               {
-                if (cnt < msr->numsamples)
-                {
-                  sptr = (char *)msr->datasamples + (cnt * samplesize);
+                sptr = (char *)msr->datasamples + (cnt * samplesize);
 
-                  if (msr->sampletype == 'i')
-                    printf ("%10d  ", *(int32_t *)sptr);
+                if (msr->sampletype == 'i')
+                  printf ("%10d  ", *(int32_t *)sptr);
 
-                  else if (msr->sampletype == 'f')
-                    printf ("%10.8g  ", *(float *)sptr);
+                else if (msr->sampletype == 'f')
+                  printf ("%10.8g  ", *(float *)sptr);
 
-                  else if (msr->sampletype == 'd')
-                    printf ("%10.10g  ", *(double *)sptr);
+                else if (msr->sampletype == 'd')
+                  printf ("%10.10g  ", *(double *)sptr);
 
-                  cnt++;
-                }
+                cnt++;
               }
-              printf ("\n");
             }
+            printf ("\n");
           }
         }
       }
     } /* End of loop over records */
 
     if (msr)
-      ms3_readmsr (&msr, NULL, 0, 0, 0, 0);
+      ms3_readmsr (&msr, NULL, NULL, NULL, flags, verbose + 1);
   }
 
   return EXIT_SUCCESS;

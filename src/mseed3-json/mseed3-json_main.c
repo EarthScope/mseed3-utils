@@ -146,16 +146,17 @@ print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t
     return EXIT_FAILURE;
   }
 
-  /* Set flags to unpack data and check CRC */
-  flags |= MSF_UNPACKDATA;
+  /* Set flags to check CRC and unpack data */
   flags |= MSF_VALIDATECRC;
+  if (print_data)
+    flags |= MSF_UNPACKDATA;
 
   if (print_array)
     printf ("[");
 
   /* Loop over all records in input file,
    * Add 1 to verbose level as verbose = 1 prints nothing extra */
-  while ((ms3_readmsr (&msr, file_name, 0, NULL, 0, verbose + 1) == MS_NOERROR))
+  while ((ms3_readmsr (&msr, file_name, NULL, NULL, flags, verbose + 1) == MS_NOERROR))
   {
     val     = json_value_init_object ();
     jsonObj = json_value_get_object (val);
@@ -314,78 +315,65 @@ print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t
       }
     }
 
-    if (print_data)
+    /* Build array of data samples if present */
+    if (msr->numsamples > 0)
     {
-      ierr = msr3_unpack_data (msr, verbose);
+      int samplesize;
+      void *sptr;
 
-      if (ierr < 0)
+      if ((samplesize = ms_samplesize (msr->sampletype)) == 0)
       {
-        fprintf (stderr, "Error: Payload parsing failed: %s\n", ms_errorstr (ierr));
+        fprintf (stderr, "Unrecognized sample type: '%c'\n", msr->sampletype);
         return EXIT_FAILURE;
       }
-
-      if (verbose > 1)
-        fprintf (stderr, "Data unpacked successfully\n");
-
-      if (msr->numsamples > 0)
+      if (msr->sampletype == 'a')
       {
-        int samplesize;
-        void *sptr;
+        /* Text data payload is not NULL terminated, so copy and make a string */
+        memcpy (databuffer, msr->datasamples, msr->numsamples);
+        databuffer[msr->numsamples] = '\0';
 
-        if ((samplesize = ms_samplesize (msr->sampletype)) == 0)
+        ierr = json_object_set_string (jsonObj, "Data", databuffer);
+
+        if (ierr == JSONFailure)
         {
-          fprintf (stderr, "Unrecognized sample type: '%c'\n", msr->sampletype);
+          fprintf (stderr, "Something went wrong generating JSON : Data (ASCII)\n");
           return EXIT_FAILURE;
         }
-        if (msr->sampletype == 'a')
+      }
+      else
+      {
+        ierr = json_object_set_value (jsonObj, "Data", json_value_init_array ());
+
+        if (ierr == JSONFailure)
         {
-          /* Text data payload is not NULL terminated, so copy and make a string */
-          memcpy (databuffer, msr->datasamples, msr->numsamples);
-          databuffer[msr->numsamples] = '\0';
+          fprintf (stderr, "Something went wrong generating JSON : Data (Array)\n");
+          return EXIT_FAILURE;
+        }
 
-          ierr = json_object_set_string (jsonObj, "Data", databuffer);
+        payload_arr = json_object_get_array (jsonObj, "Data");
 
-          if (ierr == JSONFailure)
+        for (int i = 0; i < msr->numsamples && ierr != JSONFailure; i++)
+        {
+          sptr = (char *)msr->datasamples + (i * samplesize);
+
+          if (msr->sampletype == 'i')
           {
-            fprintf (stderr, "Something went wrong generating JSON : Data (ASCII)\n");
-            return EXIT_FAILURE;
+            ierr = json_array_append_number (payload_arr, *(int32_t *)sptr);
+          }
+          else if (msr->sampletype == 'f')
+          {
+            ierr = json_array_append_number (payload_arr, *(float *)sptr);
+          }
+          else if (msr->sampletype == 'd')
+          {
+            ierr = json_array_append_number (payload_arr, *(double *)sptr);
           }
         }
-        else
+
+        if (ierr == JSONFailure)
         {
-          ierr = json_object_set_value (jsonObj, "Data", json_value_init_array ());
-
-          if (ierr == JSONFailure)
-          {
-            fprintf (stderr, "Something went wrong generating JSON : Data (Array)\n");
-            return EXIT_FAILURE;
-          }
-
-          payload_arr = json_object_get_array (jsonObj, "Data");
-
-          for (int i = 0; i < msr->numsamples && ierr != JSONFailure; i++)
-          {
-            sptr = (char *)msr->datasamples + (i * samplesize);
-
-            if (msr->sampletype == 'i')
-            {
-              ierr = json_array_append_number (payload_arr, *(int32_t *)sptr);
-            }
-            else if (msr->sampletype == 'f')
-            {
-              ierr = json_array_append_number (payload_arr, *(float *)sptr);
-            }
-            else if (msr->sampletype == 'd')
-            {
-              ierr = json_array_append_number (payload_arr, *(double *)sptr);
-            }
-          }
-
-          if (ierr == JSONFailure)
-          {
-            fprintf (stderr, "Something went wrong generating JSON : Data (numeric)\n");
-            return EXIT_FAILURE;
-          }
+          fprintf (stderr, "Something went wrong generating JSON : Data (numeric)\n");
+          return EXIT_FAILURE;
         }
       }
     }
@@ -407,7 +395,7 @@ print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t
     printf ("]");
 
   if (msr)
-    ms3_readmsr (&msr, NULL, 0, 0, 0, 0);
+    ms3_readmsr (&msr, NULL, NULL, NULL, flags, verbose + 1);
 
   return EXIT_SUCCESS;
 }
