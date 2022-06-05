@@ -22,11 +22,12 @@
 static const struct mseed3_option_s args[] = {
     {'h', "help", "   Display usage information", NULL, NO_OPTARG},
     {'v', "verbose", "Verbosity level", NULL, OPTIONAL_OPTARG},
-    {'d', "data", "   Print data payload", NULL, OPTIONAL_OPTARG},
+    {'d', "data", "   Include data payload, default is without", NULL, OPTIONAL_OPTARG},
+    {'B', "bare", "   Omit top-level array wrapper", NULL, OPTIONAL_OPTARG},
     {'V', "version", "Print program version", NULL, OPTIONAL_OPTARG},
     {0, 0, 0, 0, 0}};
 
-int print_mseed3_2_json (char *file_name, bool print_data, uint8_t verbose);
+int print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t verbose);
 
 /*! @brief Program to Print a miniSEED file in JSON format
  *
@@ -45,6 +46,7 @@ main (int argc, char **argv)
   uint8_t verbose                = 0;
   char *file_name                = NULL;
   bool print_data                = false;
+  bool print_array               = true;
 
   /* parse command line args */
   mseed3_get_short_getopt_string (&short_opt_string, args);
@@ -56,6 +58,9 @@ main (int argc, char **argv)
     {
     case 'd':
       print_data = true;
+      break;
+    case 'B':
+      print_array = false;
       break;
     case 'v':
       if (0 == optarg)
@@ -112,14 +117,14 @@ main (int argc, char **argv)
       continue;
     }
 
-    print_mseed3_2_json (file_name, print_data, verbose);
+    print_mseed3_2_json (file_name, print_data, print_array, verbose);
   }
 
   return 0;
 }
 
 int
-print_mseed3_2_json (char *file_name, bool print_data, uint8_t verbose)
+print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t verbose)
 {
   MS3Record *msr = NULL;
 
@@ -144,6 +149,9 @@ print_mseed3_2_json (char *file_name, bool print_data, uint8_t verbose)
   /* Set flags to unpack data and check CRC */
   flags |= MSF_UNPACKDATA;
   flags |= MSF_VALIDATECRC;
+
+  if (print_array)
+    printf ("[");
 
   /* Loop over all records in input file,
    * Add 1 to verbose level as verbose = 1 prints nothing extra */
@@ -394,6 +402,9 @@ print_mseed3_2_json (char *file_name, bool print_data, uint8_t verbose)
     json_value_free (val);
     records += 1;
   } /* End of loop over records */
+
+  if (print_array)
+    printf ("]");
 
   if (msr)
     ms3_readmsr (&msr, NULL, 0, 0, 0, 0);
