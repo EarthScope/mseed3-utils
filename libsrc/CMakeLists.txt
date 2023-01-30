@@ -27,7 +27,7 @@ IF(MSEED_BUILD)
 #Pulls in libmseed and build it
     ExternalProject_Add(MSEED_LIBRARY
         PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libmseed
-        GIT_REPOSITORY https://github.com/iris-edu/libmseed.git
+        GIT_REPOSITORY https://github.com/earthscope/libmseed.git
         GIT_TAG main
         #        CONFIGURE_COMMAND "" mseed spec
         CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR> <BINARY_DIR>

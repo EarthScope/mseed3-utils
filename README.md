@@ -22,7 +22,7 @@ NOTE: libmseed and WJElement are automatically installed locally via make
 
 ## Clone - Configure - Build - Install
 **Clone & Configure Project**
-- ```git clone https://github.com/iris-edu/mseed3-utils.git```
+- ```git clone https://github.com/earthscope/mseed3-utils.git```
 - ```cd mseed3-utils```
 - ```mkdir build/```
 - ```cd build/```
