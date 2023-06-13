@@ -71,7 +71,7 @@ Program to print an miniSEED file in human readable format:
 
 Usage: ./mseed3-text [options] infile(s)
 
-         ## Options ##
+     ## Options ##
      -h help    Display usage information
      -v verbose Verbosity level
      -d data    Print data payload
@@ -88,7 +88,7 @@ Program to print an miniSEED file in JSON format:
 
 Usage: ./mseed3-json [options] infile(s)
 
-         ## Options ##
+     ## Options ##
      -h help    Display usage information
      -v verbose Verbosity level
      -d data    Print data payload
