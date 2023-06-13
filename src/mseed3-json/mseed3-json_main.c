@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include <libmseed.h>
-#include <parson.h>
+#include <yyjson.h>
 
 #include "mseed3-json_config.h"
 #include <mseed3-common/cmd_opt.h>
@@ -128,17 +128,14 @@ print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t
 {
   MS3Record *msr = NULL;
 
-  JSON_Status ierr;
-  JSON_Value *val         = NULL;
-  JSON_Object *jsonObj    = NULL;
-  JSON_Value *extraVal    = NULL;
-  JSON_Array *payload_arr = NULL;
-  JSON_Object *flagsObj   = NULL;
-
   char string[1024];
-  char databuffer[MAXRECLEN];
   uint32_t flags   = 0;
   uint64_t records = 0;
+
+  yyjson_mut_doc *mut_doc;
+  yyjson_doc *ehdoc;
+  yyjson_read_err rerr;
+  bool rv = true;
 
   if (!mseed3_file_exists (file_name))
   {
@@ -156,55 +153,35 @@ print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t
 
   /* Loop over all records in input file,
    * Add 1 to verbose level as verbose = 1 prints nothing extra */
-  while ((ms3_readmsr (&msr, file_name, NULL, NULL, flags, verbose + 1) == MS_NOERROR))
+  while ((ms3_readmsr (&msr, file_name, flags, verbose + 1) == MS_NOERROR))
   {
-    val     = json_value_init_object ();
-    jsonObj = json_value_get_object (val);
+    mut_doc = yyjson_mut_doc_new (NULL);
 
-    ierr = json_object_set_string (jsonObj, "SID", msr->sid);
+    if (!mut_doc)
+    {
+      fprintf (stderr, "Cannot initialize JSON document, out of memory?\n");
+      return EXIT_FAILURE;
+    }
 
-    if (ierr == JSONFailure)
+    if (!yyjson_mut_doc_ptr_set (mut_doc, "/SID", yyjson_mut_str (mut_doc, msr->sid)))
     {
       fprintf (stderr, "Something went wrong generating JSON : SID\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "RecordLength", msr->reclen);
-
-    if (ierr == JSONFailure)
+    if (!yyjson_mut_doc_ptr_set (mut_doc, "/RecordLength", yyjson_mut_sint (mut_doc, msr->reclen)))
     {
       fprintf (stderr, "Something went wrong generating JSON : RecordLength\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "FormatVersion", msr->formatversion);
-
-    if (ierr == JSONFailure)
+    if (!yyjson_mut_doc_ptr_set (mut_doc, "/FormatVersion", yyjson_mut_sint (mut_doc, msr->formatversion)))
     {
       fprintf (stderr, "Something went wrong generating JSON : FormatVersion\n");
       return EXIT_FAILURE;
     }
 
-    /* Create Flags object */
-    ierr = json_object_set_value (jsonObj, "Flags", json_value_init_object ());
-
-    if (ierr == JSONFailure)
-    {
-      fprintf (stderr, "Something went wrong generating JSON : Flags (Object)\n");
-      return EXIT_FAILURE;
-    }
-
-    flagsObj = json_object_get_object (jsonObj, "Flags");
-
-    if (flagsObj == NULL)
-    {
-      fprintf (stderr, "Something went wrong getting JSON : Flags (Object)\n");
-      return EXIT_FAILURE;
-    }
-
-    ierr = json_object_set_number (flagsObj, "RawUInt8", msr->flags);
-
-    if (ierr == JSONFailure)
+    if (!yyjson_mut_doc_ptr_set (mut_doc, "/Flags/RawUInt8", yyjson_mut_uint (mut_doc, msr->flags)))
     {
       fprintf (stderr, "Something went wrong generating JSON : Flags RawUint8\n");
       return EXIT_FAILURE;
@@ -213,24 +190,24 @@ print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t
     /* Add boolean entries for each bit flag set */
     if (msr->flags)
     {
-      if (ierr != JSONFailure && bit (msr->flags, 0x01))
-        ierr = json_object_set_boolean (flagsObj, "CalibrationSignalsPresent", 1);
-      if (ierr != JSONFailure && bit (msr->flags, 0x02))
-        ierr = json_object_set_boolean (flagsObj, "TimeTagQuestionable", 1);
-      if (ierr != JSONFailure && bit (msr->flags, 0x04))
-        ierr = json_object_set_boolean (flagsObj, "ClockLocked", 1);
-      if (ierr != JSONFailure && bit (msr->flags, 0x08))
-        ierr = json_object_set_boolean (flagsObj, "ReservedBit3", 1);
-      if (ierr != JSONFailure && bit (msr->flags, 0x10))
-        ierr = json_object_set_boolean (flagsObj, "ReservedBit4", 1);
-      if (ierr != JSONFailure && bit (msr->flags, 0x20))
-        ierr = json_object_set_boolean (flagsObj, "ReservedBit5", 1);
-      if (ierr != JSONFailure && bit (msr->flags, 0x40))
-        ierr = json_object_set_boolean (flagsObj, "ReservedBit6", 1);
-      if (ierr != JSONFailure && bit (msr->flags, 0x80))
-        ierr = json_object_set_boolean (flagsObj, "ReservedBit7", 1);
+      if (bit (msr->flags, 0x01))
+        rv = yyjson_mut_doc_ptr_set (mut_doc, "/Flags/CalibrationSignalsPresent", yyjson_mut_bool (mut_doc, true));
+      if (rv && bit (msr->flags, 0x02))
+        rv = yyjson_mut_doc_ptr_set (mut_doc, "/Flags/TimeTagQuestionable", yyjson_mut_bool (mut_doc, true));
+      if (rv && bit (msr->flags, 0x04))
+        rv = yyjson_mut_doc_ptr_set (mut_doc, "/Flags/ClockLocked", yyjson_mut_bool (mut_doc, true));
+      if (rv && bit (msr->flags, 0x08))
+        rv = yyjson_mut_doc_ptr_set (mut_doc, "/Flags/ReservedBit3", yyjson_mut_bool (mut_doc, true));
+      if (rv && bit (msr->flags, 0x10))
+        rv = yyjson_mut_doc_ptr_set (mut_doc, "/Flags/ReservedBit4", yyjson_mut_bool (mut_doc, true));
+      if (rv && bit (msr->flags, 0x20))
+        rv = yyjson_mut_doc_ptr_set (mut_doc, "/Flags/ReservedBit5", yyjson_mut_bool (mut_doc, true));
+      if (rv && bit (msr->flags, 0x40))
+        rv = yyjson_mut_doc_ptr_set (mut_doc, "/Flags/ReservedBit6", yyjson_mut_bool (mut_doc, true));
+      if (rv && bit (msr->flags, 0x80))
+        rv = yyjson_mut_doc_ptr_set (mut_doc, "/Flags/ReservedBit7", yyjson_mut_bool (mut_doc, true));
 
-      if (ierr == JSONFailure)
+      if (rv == false)
       {
         fprintf (stderr, "Something went wrong generating JSON : Flags values\n");
         return EXIT_FAILURE;
@@ -238,66 +215,50 @@ print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t
     }
 
     ms_nstime2timestr (msr->starttime, string, ISOMONTHDAY_Z, NANO);
-    ierr = json_object_set_string (jsonObj, "StartTime", string);
-
-    if (ierr == JSONFailure)
+    if (!yyjson_mut_doc_ptr_set (mut_doc, "/StartTime", yyjson_mut_strcpy (mut_doc, string)))
     {
       fprintf (stderr, "Something went wrong generating JSON : StartTime\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "EncodingFormat", msr->encoding);
-
-    if (ierr == JSONFailure)
+    if (!yyjson_mut_doc_ptr_set (mut_doc, "/EncodingFormat", yyjson_mut_sint (mut_doc, msr->encoding)))
     {
       fprintf (stderr, "Something went wrong generating JSON : EncodingFormat\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "SampleRate", msr3_sampratehz (msr));
-
-    if (ierr == JSONFailure)
+    if (!yyjson_mut_doc_ptr_set (mut_doc, "/SampleRate", yyjson_mut_real (mut_doc, msr3_sampratehz (msr))))
     {
       fprintf (stderr, "Something went wrong generating JSON : SampleRate\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "SampleCount", (double)msr->samplecnt);
-
-    if (ierr == JSONFailure)
+    if (!yyjson_mut_doc_ptr_set (mut_doc, "/SampleCount", yyjson_mut_sint (mut_doc, msr->samplecnt)))
     {
       fprintf (stderr, "Something went wrong generating JSON : SampleCount\n");
       return EXIT_FAILURE;
     }
 
     sprintf (string, "0x%0X", msr->crc);
-    ierr = json_object_set_string (jsonObj, "CRC", string);
-
-    if (ierr == JSONFailure)
+    if (!yyjson_mut_doc_ptr_set (mut_doc, "/CRC", yyjson_mut_strcpy (mut_doc, string)))
     {
       fprintf (stderr, "Something went wrong generating JSON : CRC\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "PublicationVersion", msr->pubversion);
-
-    if (ierr == JSONFailure)
+    if (!yyjson_mut_doc_ptr_set (mut_doc, "/PublicationVersion", yyjson_mut_sint (mut_doc, msr->pubversion)))
     {
       fprintf (stderr, "Something went wrong generating JSON : PublicationVersion\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "ExtraLength", msr->extralength);
-
-    if (ierr == JSONFailure)
+    if (!yyjson_mut_doc_ptr_set (mut_doc, "/ExtraLength", yyjson_mut_sint (mut_doc, msr->extralength)))
     {
       fprintf (stderr, "Something went wrong generating JSON : ExtraLength\n");
       return EXIT_FAILURE;
     }
 
-    ierr = json_object_set_number (jsonObj, "DataLength", msr->datalength);
-
-    if (ierr == JSONFailure)
+    if (!yyjson_mut_doc_ptr_set (mut_doc, "/DataLength", yyjson_mut_sint (mut_doc, msr->datalength)))
     {
       fprintf (stderr, "Something went wrong generating JSON : DataLength\n");
       return EXIT_FAILURE;
@@ -305,10 +266,10 @@ print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t
 
     if (msr->extralength > 0 && msr->extra)
     {
-      extraVal = json_parse_string (msr->extra);
-      ierr     = json_object_set_value (jsonObj, "ExtraHeaders", extraVal);
+      ehdoc = yyjson_read_opts (msr->extra, msr->extralength, 0, NULL, &rerr);
 
-      if (ierr == JSONFailure)
+      if (!yyjson_mut_doc_ptr_set (mut_doc, "/ExtraHeaders",
+                                   yyjson_mut_doc_get_root (yyjson_doc_mut_copy(ehdoc, NULL))))
       {
         fprintf (stderr, "Something went wrong generating JSON : ExtraHeaders\n");
         return EXIT_FAILURE;
@@ -318,6 +279,7 @@ print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t
     /* Build array of data samples if present */
     if (msr->numsamples > 0)
     {
+      yyjson_mut_val *array;
       int samplesize;
       void *sptr;
 
@@ -326,51 +288,48 @@ print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t
         fprintf (stderr, "Unrecognized sample type: '%c'\n", msr->sampletype);
         return EXIT_FAILURE;
       }
-      if (msr->sampletype == 'a')
+
+      if (msr->sampletype == 't')
       {
-        /* Text data payload is not NULL terminated, so copy and make a string */
-        memcpy (databuffer, msr->datasamples, msr->numsamples);
-        databuffer[msr->numsamples] = '\0';
+        rv = yyjson_mut_doc_ptr_set (mut_doc, "/Data",
+                                     yyjson_mut_strn (mut_doc,
+                                                      (const char *)msr->datasamples,
+                                                      msr->numsamples));
 
-        ierr = json_object_set_string (jsonObj, "Data", databuffer);
-
-        if (ierr == JSONFailure)
+        if (rv == false)
         {
-          fprintf (stderr, "Something went wrong generating JSON : Data (ASCII)\n");
+          fprintf (stderr, "Something went wrong generating JSON : Data (Text)\n");
           return EXIT_FAILURE;
         }
       }
       else
       {
-        ierr = json_object_set_value (jsonObj, "Data", json_value_init_array ());
-
-        if (ierr == JSONFailure)
+        if ((array = yyjson_mut_arr (mut_doc)) == NULL ||
+            !yyjson_mut_doc_ptr_set (mut_doc, "/Data", array))
         {
-          fprintf (stderr, "Something went wrong generating JSON : Data (Array)\n");
+          fprintf (stderr, "Something went wrong generating JSON : Data array\n");
           return EXIT_FAILURE;
         }
 
-        payload_arr = json_object_get_array (jsonObj, "Data");
-
-        for (int i = 0; i < msr->numsamples && ierr != JSONFailure; i++)
+        for (int i = 0; i < msr->numsamples && rv != false; i++)
         {
           sptr = (char *)msr->datasamples + (i * samplesize);
 
           if (msr->sampletype == 'i')
           {
-            ierr = json_array_append_number (payload_arr, *(int32_t *)sptr);
+            rv = yyjson_mut_arr_append (array, yyjson_mut_sint (mut_doc, *(int32_t *)sptr));
           }
           else if (msr->sampletype == 'f')
           {
-            ierr = json_array_append_number (payload_arr, *(float *)sptr);
+            rv = yyjson_mut_arr_append (array, yyjson_mut_real (mut_doc, *(float *)sptr));
           }
           else if (msr->sampletype == 'd')
           {
-            ierr = json_array_append_number (payload_arr, *(double *)sptr);
+            rv = yyjson_mut_arr_append (array, yyjson_mut_real (mut_doc, *(double *)sptr));
           }
         }
 
-        if (ierr == JSONFailure)
+        if (rv == false)
         {
           fprintf (stderr, "Something went wrong generating JSON : Data (numeric)\n");
           return EXIT_FAILURE;
@@ -378,16 +337,19 @@ print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t
       }
     }
 
-    char *full_string = json_serialize_to_string_pretty (val);
-    printf ("%s%s", (records == 0) ? "" : ",", full_string);
-    json_free_serialized_string (full_string);
+    yyjson_write_err werr;
+    char *serialized = yyjson_mut_write_opts (mut_doc, YYJSON_WRITE_PRETTY, NULL, NULL, &werr);
 
-    if (print_data)
+    if (serialized == NULL)
     {
-      json_array_clear (payload_arr);
+      fprintf (stderr, "Something went wrong generating JSON : %s\n", werr.msg);
+      return EXIT_FAILURE;
     }
 
-    json_value_free (val);
+    printf ("%s%s", (records == 0) ? "" : ",", serialized);
+
+    yyjson_mut_doc_free (mut_doc);
+
     records += 1;
   } /* End of loop over records */
 
@@ -395,7 +357,7 @@ print_mseed3_2_json (char *file_name, bool print_data, bool print_array, uint8_t
     printf ("]");
 
   if (msr)
-    ms3_readmsr (&msr, NULL, NULL, NULL, flags, verbose + 1);
+    ms3_readmsr (&msr, NULL, flags, verbose + 1);
 
   return EXIT_SUCCESS;
 }

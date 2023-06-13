@@ -117,7 +117,7 @@ main (int argc, char **argv)
 
     /* loop over all records in intput file,
      * Add 1 to verbose level as verbose = 1 prints nothing extra */
-    while ((ms3_readmsr (&msr, file_name, NULL, NULL, flags, verbose + 1) == MS_NOERROR))
+    while ((ms3_readmsr (&msr, file_name, flags, verbose + 1) == MS_NOERROR))
     {
       msr3_print (msr, 2);
 
@@ -135,30 +135,30 @@ main (int argc, char **argv)
           fprintf (stderr, "Unrecognized sample type: '%c'\n", msr->sampletype);
           return EXIT_FAILURE;
         }
-        if (msr->sampletype == 'a')
+        if (msr->sampletype == 't')
         {
-          char *ascii     = (char *)msr->datasamples;
+          char *textdata  = (char *)msr->datasamples;
           uint64_t length = msr->numsamples;
 
           /* Print maximum log message segments */
           while (length > (MAX_LOG_MSG_LENGTH - 1))
           {
-            printf ("%.*s", (MAX_LOG_MSG_LENGTH - 1), ascii);
-            ascii += MAX_LOG_MSG_LENGTH - 1;
+            printf ("%.*s", (MAX_LOG_MSG_LENGTH - 1), textdata);
+            textdata += MAX_LOG_MSG_LENGTH - 1;
             length -= MAX_LOG_MSG_LENGTH - 1;
           }
 
-          /* Print any remaining ASCII and add a newline */
+          /* Print any remaining text and add a newline */
           if (length > 0)
           {
-            printf ("%.*s\n", (int)length, ascii);
+            printf ("%.*s\n", (int)length, textdata);
           }
           else
           {
             printf ("\n");
           }
         }
-        else /* If samples are non-ASCII, i.e. numbers */
+        else /* If samples are non-text i.e. numbers */
         {
           for (cnt = 0, line = 0; line < lines; line++)
           {
@@ -187,7 +187,7 @@ main (int argc, char **argv)
     } /* End of loop over records */
 
     if (msr)
-      ms3_readmsr (&msr, NULL, NULL, NULL, flags, verbose + 1);
+      ms3_readmsr (&msr, NULL, flags, verbose + 1);
   }
 
   return EXIT_SUCCESS;
